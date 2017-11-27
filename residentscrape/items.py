@@ -11,4 +11,8 @@ import scrapy
 class ResidentscrapeItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
+    eventname = scrapy.Field()
+    eventdate = scrapy.Field()
+    eventtime = scrapy.Field()
+
     pass
