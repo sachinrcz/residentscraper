@@ -14,5 +14,13 @@ class ResidentscrapeItem(scrapy.Item):
     eventname = scrapy.Field()
     eventdate = scrapy.Field()
     eventtime = scrapy.Field()
-
+    venuename = scrapy.Field()
+    venueadd = scrapy.Field()
+    cost = scrapy.Field()
+    promoter = scrapy.Field()
+    age = scrapy.Field()
+    eventurl = scrapy.Field()
+    members = scrapy.Field()
+    lineup = scrapy.Field()
+    eventdetail = scrapy.Field()
     pass

@@ -12,11 +12,13 @@ class ResidentscrapePipeline(object):
     def open_spider(self,spider):
         self.file = open('ResidentScrape.csv','w')
         self.csvwriter = csv.writer(self.file)
-        self.csvwriter.writerow(["Event Name",'Event Date','Event Timing'])
+        self.headers = ["Event Name",'Event Date','Event Timing',"Venue Name","Venue Address","Cost","Minimum Age","Promoters","Memeber Attending","Lineup","Details","EventURL"]
+        self.keys = ['eventname','eventdate','eventtime','venuename','venueadd','cost','age','promoter','members','lineup','eventdetail','eventurl']
+        self.csvwriter.writerow(self.headers)
 
 
     def process_item(self, item, spider):
-        self.csvwriter.writerow([item['eventname'],item['eventdate'],item['eventtime']])
+        self.csvwriter.writerow([item[key] for key in self.keys])
 
         return item
 
