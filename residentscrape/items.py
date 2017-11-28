@@ -23,4 +23,21 @@ class ResidentscrapeItem(scrapy.Item):
     members = scrapy.Field()
     lineup = scrapy.Field()
     eventdetail = scrapy.Field()
-    pass
+    promoterName = scrapy.Field()
+    promoterAdd = scrapy.Field()
+    promoterPhone = scrapy.Field()
+    promoterEmail = scrapy.Field()
+    promoterWebsite = scrapy.Field()
+    promoterFacebook = scrapy.Field()
+    promoterTwitter = scrapy.Field()
+    promoterInstagram = scrapy.Field()
+    promoterURL = scrapy.Field()
+    promoterRegion = scrapy.Field()
+
+
+
+
+    def __repr__(self):
+        """only print out attr1 after exiting the Pipeline"""
+        return repr({"Event Name": self['eventname']})
+
