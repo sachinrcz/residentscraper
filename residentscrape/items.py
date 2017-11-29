@@ -41,3 +41,37 @@ class ResidentscrapeItem(scrapy.Item):
         """only print out attr1 after exiting the Pipeline"""
         return repr({"Event Name": self['eventname']})
 
+class ArtistscrapeItem(scrapy.Item):
+    # define the fields for your item here like:
+    # name = scrapy.Field()
+    eventName = scrapy.Field()
+    eventStartDate = scrapy.Field()
+    eventEndDate = scrapy.Field()
+    eventTime = scrapy.Field()
+    venueName = scrapy.Field()
+    venueAdd = scrapy.Field()
+    cost = scrapy.Field()
+    promoter = scrapy.Field()
+    age = scrapy.Field()
+    eventURL = scrapy.Field()
+    members = scrapy.Field()
+    lineup = scrapy.Field()
+    eventDetail = scrapy.Field()
+    promoterName = scrapy.Field()
+    promoterAdd = scrapy.Field()
+    promoterPhone = scrapy.Field()
+    promoterEmail = scrapy.Field()
+    promoterWebsite = scrapy.Field()
+    promoterFacebook = scrapy.Field()
+    promoterTwitter = scrapy.Field()
+    promoterInstagram = scrapy.Field()
+    promoterURL = scrapy.Field()
+    promoterRegion = scrapy.Field()
+
+
+
+
+    def __repr__(self):
+        """only print out attr1 after exiting the Pipeline"""
+        return repr({"Event Name": self['eventName']})
+
