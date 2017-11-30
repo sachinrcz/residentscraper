@@ -75,3 +75,18 @@ class ArtistscrapeItem(scrapy.Item):
         """only print out attr1 after exiting the Pipeline"""
         return repr({"Event Name": self['eventName']})
 
+class ArtistItem(scrapy.Item):
+
+    name = scrapy.Field()
+    realName = scrapy.Field()
+    sourceRef = scrapy.Field()
+    aliases = scrapy.Field()
+    country = scrapy.Field()
+    followers = scrapy.Field()
+    biography = scrapy.Field()
+    website = scrapy.Field()
+    additional = scrapy.Field()
+
+    def __repr__(self):
+        """only print out attr1 after exiting the Pipeline"""
+        return repr({"Artist Name": self['name']})

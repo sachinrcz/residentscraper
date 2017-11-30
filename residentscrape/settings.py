@@ -69,7 +69,7 @@ DEFAULT_REQUEST_HEADERS = {
 ITEM_PIPELINES = {
    # 'residentscrape.pipelines.ResidentscrapePipeline': 300,
    #  'residentscrape.pipelines.ArtistscrapePipeline': 300,
-    'residentscrape.pipelines.MySQLStorePipeLine': 300,
+    'residentscrape.pipelines.ArtistSQLPipeLine': 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
