@@ -1,0 +1,134 @@
+2017-12-01 18:31:10 [scrapy.utils.log] INFO: Scrapy 1.4.0 started (bot: residentscrape)
+2017-12-01 18:31:10 [scrapy.utils.log] INFO: Overridden settings: {'BOT_NAME': 'residentscrape', 'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter', 'LOGSTATS_INTERVAL': 0, 'LOG_FILE': '/home/sachin/Sachin/upwork/residentscrape/tmp/scrapy_output.txt', 'LOG_STDOUT': True, 'NEWSPIDER_MODULE': 'residentscrape.spiders', 'ROBOTSTXT_OBEY': True, 'SPIDER_MODULES': ['residentscrape.spiders']}
+2017-12-01 18:31:11 [scrapy.middleware] INFO: Enabled extensions:
+['scrapy.extensions.corestats.CoreStats',
+ 'scrapy.extensions.telnet.TelnetConsole',
+ 'scrapy.extensions.memusage.MemoryUsage']
+2017-12-01 18:31:11 [scrapy.middleware] INFO: Enabled downloader middlewares:
+['scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware',
+ 'scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware',
+ 'scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware',
+ 'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware',
+ 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware',
+ 'scrapy.downloadermiddlewares.retry.RetryMiddleware',
+ 'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware',
+ 'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware',
+ 'scrapy.downloadermiddlewares.redirect.RedirectMiddleware',
+ 'scrapy.downloadermiddlewares.cookies.CookiesMiddleware',
+ 'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware',
+ 'scrapy.downloadermiddlewares.stats.DownloaderStats']
+2017-12-01 18:31:11 [scrapy.middleware] INFO: Enabled spider middlewares:
+['scrapy.spidermiddlewares.httperror.HttpErrorMiddleware',
+ 'scrapy.spidermiddlewares.offsite.OffsiteMiddleware',
+ 'scrapy.spidermiddlewares.referer.RefererMiddleware',
+ 'scrapy.spidermiddlewares.urllength.UrlLengthMiddleware',
+ 'scrapy.spidermiddlewares.depth.DepthMiddleware']
+2017-12-01 18:31:11 [scrapy.middleware] INFO: Enabled item pipelines:
+[]
+2017-12-01 18:31:11 [scrapy.extensions.telnet] DEBUG: Telnet console listening on 127.0.0.1:6023
+2017-12-01 18:31:11 [scrapy.core.engine] INFO: Spider opened
+2017-12-01 18:31:13 [scrapy.core.engine] DEBUG: Crawled (200) <GET https://www.residentadvisor.net/robots.txt> (referer: https://www.residentadvisor.net)
+2017-12-01 18:31:15 [scrapy.core.engine] DEBUG: Crawled (200) <GET https://www.residentadvisor.net/club.aspx?id=33592> (referer: https://www.residentadvisor.net)
+2017-12-01 18:31:17 [stdout] INFO: [s] Available Scrapy objects:
+2017-12-01 18:31:17 [stdout] INFO: [s]   scrapy     scrapy module (contains scrapy.Request, scrapy.Selector, etc)
+2017-12-01 18:31:17 [stdout] INFO: [s]   crawler    <scrapy.crawler.Crawler object at 0x7f3d2f3d0cc0>
+2017-12-01 18:31:17 [stdout] INFO: [s]   item       {}
+2017-12-01 18:31:17 [stdout] INFO: [s]   request    <GET https://www.residentadvisor.net/club.aspx?id=33592>
+2017-12-01 18:31:17 [stdout] INFO: [s]   response   <200 https://www.residentadvisor.net/club.aspx?id=33592>
+2017-12-01 18:31:17 [stdout] INFO: [s]   settings   <scrapy.settings.Settings object at 0x7f3d269d4780>
+2017-12-01 18:31:17 [stdout] INFO: [s]   spider     <DefaultSpider 'default' at 0x7f3d24c000f0>
+2017-12-01 18:31:17 [stdout] INFO: [s] Useful shortcuts:
+2017-12-01 18:31:17 [stdout] INFO: [s]   fetch(url[, redirect=True]) Fetch URL and update local objects (by default, redirects are followed)
+2017-12-01 18:31:17 [stdout] INFO: [s]   fetch(req)                  Fetch a scrapy.Request and update local objects
+2017-12-01 18:31:17 [stdout] INFO: [s]   shelp()           Shell help (print this help)
+2017-12-01 18:31:17 [stdout] INFO: [s]   view(response)    View response in a browser
+2017-12-01 18:31:17 [stdout] INFO: In [1]:
+2017-12-01 18:31:41 [scrapy.utils.log] INFO: Scrapy 1.4.0 started (bot: residentscrape)
+2017-12-01 18:31:41 [scrapy.utils.log] INFO: Overridden settings: {'BOT_NAME': 'residentscrape', 'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter', 'LOGSTATS_INTERVAL': 0, 'LOG_FILE': '/home/sachin/Sachin/upwork/residentscrape/tmp/scrapy_output.txt', 'LOG_STDOUT': True, 'NEWSPIDER_MODULE': 'residentscrape.spiders', 'ROBOTSTXT_OBEY': True, 'SPIDER_MODULES': ['residentscrape.spiders']}
+2017-12-01 18:31:41 [scrapy.middleware] INFO: Enabled extensions:
+['scrapy.extensions.corestats.CoreStats',
+ 'scrapy.extensions.telnet.TelnetConsole',
+ 'scrapy.extensions.memusage.MemoryUsage']
+2017-12-01 18:31:41 [scrapy.middleware] INFO: Enabled downloader middlewares:
+['scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware',
+ 'scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware',
+ 'scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware',
+ 'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware',
+ 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware',
+ 'scrapy.downloadermiddlewares.retry.RetryMiddleware',
+ 'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware',
+ 'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware',
+ 'scrapy.downloadermiddlewares.redirect.RedirectMiddleware',
+ 'scrapy.downloadermiddlewares.cookies.CookiesMiddleware',
+ 'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware',
+ 'scrapy.downloadermiddlewares.stats.DownloaderStats']
+2017-12-01 18:31:41 [scrapy.middleware] INFO: Enabled spider middlewares:
+['scrapy.spidermiddlewares.httperror.HttpErrorMiddleware',
+ 'scrapy.spidermiddlewares.offsite.OffsiteMiddleware',
+ 'scrapy.spidermiddlewares.referer.RefererMiddleware',
+ 'scrapy.spidermiddlewares.urllength.UrlLengthMiddleware',
+ 'scrapy.spidermiddlewares.depth.DepthMiddleware']
+2017-12-01 18:31:41 [scrapy.middleware] INFO: Enabled item pipelines:
+[]
+2017-12-01 18:31:41 [scrapy.extensions.telnet] DEBUG: Telnet console listening on 127.0.0.1:6024
+2017-12-01 18:31:41 [scrapy.core.engine] INFO: Spider opened
+2017-12-01 18:31:41 [scrapy.core.engine] DEBUG: Crawled (200) <GET https://www.residentadvisor.net/robots.txt> (referer: https://www.residentadvisor.net)
+2017-12-01 18:31:43 [scrapy.core.engine] DEBUG: Crawled (200) <GET https://www.residentadvisor.net/club.aspx?id=33592> (referer: https://www.residentadvisor.net)
+2017-12-01 18:31:44 [stdout] INFO: [s] Available Scrapy objects:
+2017-12-01 18:31:44 [stdout] INFO: [s]   scrapy     scrapy module (contains scrapy.Request, scrapy.Selector, etc)
+2017-12-01 18:31:44 [stdout] INFO: [s]   crawler    <scrapy.crawler.Crawler object at 0x7fd130a92cc0>
+2017-12-01 18:31:44 [stdout] INFO: [s]   item       {}
+2017-12-01 18:31:44 [stdout] INFO: [s]   request    <GET https://www.residentadvisor.net/club.aspx?id=33592>
+2017-12-01 18:31:44 [stdout] INFO: [s]   response   <200 https://www.residentadvisor.net/club.aspx?id=33592>
+2017-12-01 18:31:44 [stdout] INFO: [s]   settings   <scrapy.settings.Settings object at 0x7fd128096860>
+2017-12-01 18:31:44 [stdout] INFO: [s]   spider     <DefaultSpider 'default' at 0x7fd1263074a8>
+2017-12-01 18:31:44 [stdout] INFO: [s] Useful shortcuts:
+2017-12-01 18:31:44 [stdout] INFO: [s]   fetch(url[, redirect=True]) Fetch URL and update local objects (by default, redirects are followed)
+2017-12-01 18:31:44 [stdout] INFO: [s]   fetch(req)                  Fetch a scrapy.Request and update local objects
+2017-12-01 18:31:44 [stdout] INFO: [s]   shelp()           Shell help (print this help)
+2017-12-01 18:31:44 [stdout] INFO: [s]   view(response)    View response in a browser
+2017-12-01 18:31:44 [stdout] INFO: In [1]:
+2017-12-01 19:05:46 [scrapy.utils.log] INFO: Scrapy 1.4.0 started (bot: residentscrape)
+2017-12-01 19:05:46 [scrapy.utils.log] INFO: Overridden settings: {'BOT_NAME': 'residentscrape', 'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter', 'LOGSTATS_INTERVAL': 0, 'LOG_FILE': '/home/sachin/Sachin/upwork/residentscrape/tmp/scrapy_output.txt', 'NEWSPIDER_MODULE': 'residentscrape.spiders', 'ROBOTSTXT_OBEY': True, 'SPIDER_MODULES': ['residentscrape.spiders']}
+2017-12-01 19:05:47 [scrapy.middleware] INFO: Enabled extensions:
+['scrapy.extensions.corestats.CoreStats',
+ 'scrapy.extensions.telnet.TelnetConsole',
+ 'scrapy.extensions.memusage.MemoryUsage']
+2017-12-01 19:05:47 [scrapy.middleware] INFO: Enabled downloader middlewares:
+['scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware',
+ 'scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware',
+ 'scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware',
+ 'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware',
+ 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware',
+ 'scrapy.downloadermiddlewares.retry.RetryMiddleware',
+ 'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware',
+ 'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware',
+ 'scrapy.downloadermiddlewares.redirect.RedirectMiddleware',
+ 'scrapy.downloadermiddlewares.cookies.CookiesMiddleware',
+ 'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware',
+ 'scrapy.downloadermiddlewares.stats.DownloaderStats']
+2017-12-01 19:05:47 [scrapy.middleware] INFO: Enabled spider middlewares:
+['scrapy.spidermiddlewares.httperror.HttpErrorMiddleware',
+ 'scrapy.spidermiddlewares.offsite.OffsiteMiddleware',
+ 'scrapy.spidermiddlewares.referer.RefererMiddleware',
+ 'scrapy.spidermiddlewares.urllength.UrlLengthMiddleware',
+ 'scrapy.spidermiddlewares.depth.DepthMiddleware']
+2017-12-01 19:05:47 [scrapy.middleware] INFO: Enabled item pipelines:
+['residentscrape.pipelines.ArtistSQLPipeLine']
+2017-12-01 19:05:47 [scrapy.extensions.telnet] DEBUG: Telnet console listening on 127.0.0.1:6025
+2017-12-01 19:05:47 [scrapy.core.engine] INFO: Spider opened
+2017-12-01 19:05:47 [twisted] CRITICAL: Unhandled error in Deferred:
+2017-12-01 19:05:47 [twisted] CRITICAL: 
+Traceback (most recent call last):
+  File "/home/sachin/anaconda3/envs/scrapy/lib/python3.6/site-packages/twisted/internet/defer.py", line 653, in _runCallbacks
+    current.result = callback(current.result, *args, **kw)
+  File "/home/sachin/Sachin/upwork/residentscrape/residentscrape/pipelines.py", line 164, in open_spider
+    use_unicode=True)
+  File "/home/sachin/anaconda3/envs/scrapy/lib/python3.6/site-packages/MySQLdb/__init__.py", line 86, in Connect
+    return Connection(*args, **kwargs)
+  File "/home/sachin/anaconda3/envs/scrapy/lib/python3.6/site-packages/MySQLdb/connections.py", line 204, in __init__
+    super(Connection, self).__init__(*args, **kwargs2)
+TypeError: connect() argument 1 must be str, not None
+2017-12-01 19:05:47 [scrapy.core.engine] DEBUG: Crawled (200) <GET https://www.residentadvisor.net/robots.txt> (referer: https://www.residentadvisor.net)
+2017-12-01 19:05:49 [scrapy.core.engine] DEBUG: Crawled (200) <GET https://www.residentadvisor.net/club.aspx?id=33592> (referer: https://www.residentadvisor.net)
+2017-12-01 20:01:31 [scrapy.crawler] INFO: Received SIGTERM, shutting down gracefully. Send again to force 

@@ -69,7 +69,8 @@ DEFAULT_REQUEST_HEADERS = {
 ITEM_PIPELINES = {
    # 'residentscrape.pipelines.ResidentscrapePipeline': 300,
    #  'residentscrape.pipelines.ArtistscrapePipeline': 300,
-    'residentscrape.pipelines.ArtistSQLPipeLine': 300,
+   #  'residentscrape.pipelines.ArtistSQLPipeLine': 300,
+    'residentscrape.pipelines.EventSQLPipeLine': 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -94,3 +95,5 @@ ITEM_PIPELINES = {
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 SQLUSERNAME = 'root'
 DATABASE = 'WDJP'
+# LOG_STDOUT = True
+# LOG_FILE = '/home/sachin/Sachin/upwork/residentscrape/tmp/scrapy_output.txt'

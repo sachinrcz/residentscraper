@@ -26,8 +26,13 @@ class ResidentSpider(scrapy.Spider):
         data = cursor.fetchall()
         urls = [row[3]+'/dates' for row in data]
         for url in urls:
-            request = scrapy.Request(url=url, callback=self.parse)
-            yield request
+            if 'http' in url:
+                request = scrapy.Request(url=url, callback=self.parse)
+                yield request
+            elif 'resident' in url:
+                request = scrapy.Request(url='https://'+url, callback=self.parse)
+                yield request
+
         ##For testing with single start url
         # url = 'https://www.residentadvisor.net/dj/astrix/dates'
         # request = scrapy.Request(url=url, callback=self.parse)
