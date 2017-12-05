@@ -7,29 +7,29 @@ from bs4 import BeautifulSoup
 import MySQLdb
 import os
 import sys
+from scrapy.utils.project import get_project_settings
 
 class EventSpider(scrapy.Spider):
 
     name = "EventSpider"
 
     domain = "https://www.residentadvisor.net"
-    custom_settings = {
-        'HOST': 'localhost',
-        'DATABASE':'WDJPNew',
-        'SQLUSERNAME':'root',
-        'sourceID':'2',
-    }
+
 
     def start_requests(self):
+        self.custom_settings = get_project_settings()
         password = os.environ.get('SECRET_KEY')
         db = MySQLdb.connect(host=self.custom_settings['HOST'], port=3306, user=self.custom_settings['SQLUSERNAME'], passwd=password, db=self.custom_settings['DATABASE'])
         cursor = db.cursor()
-        cursor.execute('SELECT sourceURL FROM WDJPNew.scrape_Artists LIMIT 100;')
-        data = cursor.fetchall()
-        urls = [row[0]+'/dates' for row in data]
-        for url in urls:
+        cursor.execute('SELECT sourceArtistRef, sourceURL FROM WDJPNew.scrape_Artists LIMIT 10;')
+        rows = cursor.fetchall()
+        # urls = [row[0]+'/dates' for row in data]
+        for row in rows:
+            url = row[1]+'/dates'
+            artist = row[0]
             if 'http' in url:
-                request = scrapy.Request(url=url, callback=self.parse)
+                request = scrapy.Request(url=url, callback=self.parse, dont_filter=True)
+                request.meta['artistSourceRef'] = artist
                 yield request
         ##For testing with single start url
         # url = 'https://www.residentadvisor.net/dj/astrix/dates'
@@ -42,7 +42,8 @@ class EventSpider(scrapy.Spider):
             upcomingselector = response.css('ul.mobile-pr24-tablet-desktop-pr8')[0].xpath('.//li')[0]
             events = upcomingselector.xpath('.//a[contains(@itemprop, "url")]/@href').extract()
             for event in events:
-                request = scrapy.Request(url= self.domain + event,callback=self.parse_event)
+                request = scrapy.Request(url= self.domain + event,callback=self.parse_event, dont_filter=True)
+                request.meta['artistSourceRef'] = response.meta['artistSourceRef']
                 yield request
 
 
@@ -51,9 +52,7 @@ class EventSpider(scrapy.Spider):
         # Initialize
         for field in item.fields:
             item.setdefault(field, '')
-        item['eventSourceRef'] = 0
-        item['venueSourceRef'] = 0
-        item['promoterSourceRef'] = 0
+        item['artistSourceRef'] = response.meta['artistSourceRef']
         item['venueCapacity'] = 0
         item['eventFollowers'] = 0
         item['venueFollowers'] = 0
@@ -65,12 +64,12 @@ class EventSpider(scrapy.Spider):
         except:
             item['eventName'] = response.css('div.position').xpath('.//h1//text()').extract()[0]
         try:
-            item['eventSourceRef'] = int(response.url.split('/')[-1].strip())
+            item['eventSourceRef'] = response.url.split('/')[-1].strip()
         except:
             pass
         try:
             if len(item['eventSourceRef']) < 1:
-                item['eventSourceRef'] = int(response.url.split('/')[-2].strip())
+                item['eventSourceRef'] = response.url.split('/')[-2].strip()
         except:
             pass
         item['eventSourceText'] = response.text
@@ -109,7 +108,7 @@ class EventSpider(scrapy.Spider):
                 except:
                     pass
                 if len(item['eventVenueURL']) == 0 :
-                    item['eventTBA'] = ', '.join(list[1:])
+                    item['eventVenueAddress'] = ', '.join(list[1:])
                 continue
 
             if 'internet' in header:
@@ -164,13 +163,21 @@ class EventSpider(scrapy.Spider):
             pass
 
         # EventAdmin Section
-        temp = response.css('div#event-item').css('div.links').xpath('.//li/a')
+        temp = response.css('div#event-item').css('div.links').xpath('.//ul')
         try:
             for i in temp:
-                test = i.xpath('.//@href').extract()[0]
-                if 'profile' in test:
-                    item['eventAdmin'] = i.xpath('.//text()').extract()[0].strip()
-                    break
+                head = i.xpath('.//text()').extract()[0]
+                if 'admin' in head:
+                    item['eventAdmin'] = i.xpath('.//li/a/text()').extract()[0].strip()
+                    continue
+                if 'Promotional' in head:
+                    links = i.xpath('.//li/a')
+                    for link in links:
+                        text = link.xpath('.//text()').extract()[0]
+                        if 'Facebook' in text:
+                            item['eventFacebook'] = link.xpath('.//@href').extract()[0]
+                            continue
+                        item['eventPromotional'] =  link.xpath('.//@href').extract()[0]
         except:
             pass
 
@@ -184,12 +191,12 @@ class EventSpider(scrapy.Spider):
         except:
             pass
         try:
-            item['venueSourceRef'] = int(item['eventVenueURL'].split('id=')[-1].strip())
+            item['venueSourceRef'] = item['eventVenueURL'].split('id=')[-1].strip()
         except:
             pass
 
         if len(item['eventVenueURL']) > 0:
-            request = scrapy.Request(url=item['eventVenueURL'],callback=self.parse_venue,dont_filter=True)
+            request = scrapy.Request(url=item['eventVenueURL'],callback=self.parse_venue, dont_filter=True)
             request.meta['item'] = item
             yield request
         else:
@@ -208,7 +215,7 @@ class EventSpider(scrapy.Spider):
         item['venueSourceURL'] = response.url
         item['venueSourceText'] = response.text
         try:
-            item['venueSourceRef'] = int(response.url.split('id=')[-1].strip())
+            item['venueSourceRef'] = response.url.split('id=')[-1].strip()
         except:
             pass
         try:
@@ -318,7 +325,7 @@ class EventSpider(scrapy.Spider):
         item['promoterSourceURL'] = response.url
         item['promoterSourceText'] = response.text
         try:
-            item['promoterSourceRef'] = int(response.url.split('id=')[-1].strip())
+            item['promoterSourceRef'] = response.url.split('id=')[-1].strip()
         except:
             pass
         details = response.css('aside#detail').xpath('.//li')

@@ -77,6 +77,7 @@ class ArtistscrapeItem(scrapy.Item):
 
 class ArtistItem(scrapy.Item):
 
+    artistID = scrapy.Field()
     name = scrapy.Field()
     realName = scrapy.Field()
     sourceRef = scrapy.Field()
@@ -102,6 +103,11 @@ class ArtistItem(scrapy.Item):
 
 class ResidentItem(scrapy.Item):
 
+    artistSourceRef = scrapy.Field()
+    scrapeArtistID = scrapy.Field()
+    scrapeEventID = scrapy.Field()
+    scrapePromoterID = scrapy.Field()
+    scrapeVenueID = scrapy.Field()
 
     ## Fields from eventPage
     eventName = scrapy.Field()
@@ -122,10 +128,11 @@ class ResidentItem(scrapy.Item):
     eventTicketTier = scrapy.Field()
     eventFacebook = scrapy.Field()
     eventTwitter = scrapy.Field()
+    eventPromotional = scrapy.Field()
     eventSourceURL = scrapy.Field()
     eventSourceText = scrapy.Field()
     eventVenueURL = scrapy.Field()
-    eventTBA = scrapy.Field()
+    eventVenueAddress = scrapy.Field()
     eventPromoters = scrapy.Field()
     eventPromotersURL = scrapy.Field()
 

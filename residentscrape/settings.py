@@ -69,7 +69,7 @@ DEFAULT_REQUEST_HEADERS = {
 ITEM_PIPELINES = {
    # 'residentscrape.pipelines.ResidentscrapePipeline': 300,
    #  'residentscrape.pipelines.ArtistscrapePipeline': 300,
-   #  'residentscrape.pipelines.ArtistSQLPipeLine': 300,
+    'residentscrape.pipelines.ArtistSQLPipeLine': 300,
     'residentscrape.pipelines.EventSQLPipeLine': 300,
 }
 
@@ -94,6 +94,8 @@ ITEM_PIPELINES = {
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 SQLUSERNAME = 'root'
-DATABASE = 'WDJP'
+DATABASE = 'WDJPNew'
+HOST = 'localhost'
+SOURCE_ID = '2'
 # LOG_STDOUT = True
 # LOG_FILE = '/home/sachin/Sachin/upwork/residentscrape/tmp/scrapy_output.txt'

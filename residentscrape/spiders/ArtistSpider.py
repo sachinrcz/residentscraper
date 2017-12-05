@@ -6,25 +6,23 @@ import json
 from bs4 import BeautifulSoup
 import MySQLdb
 import os
+from scrapy.utils.project import get_project_settings
+import logging
 
 class ArtistSpider(scrapy.Spider):
 
     name = "ArtistSpider"
 
     domain = "https://www.residentadvisor.net"
-    custom_settings = {
-        'HOST': 'localhost',
-        'DATABASE':'WDJPNew',
-        'SQLUSERNAME':'root',
-        'sourceID': '2',
-    }
 
+    logger = logging.getLogger("ArtistSpider")
 
     def start_requests(self):
+        self.custom_settings = get_project_settings()
         password = os.environ.get('SECRET_KEY')
         db = MySQLdb.connect(host=self.custom_settings['HOST'], port=3306, user=self.custom_settings['SQLUSERNAME'], passwd=password, db=self.custom_settings['DATABASE'])
         cursor = db.cursor()
-        cursor.execute("SELECT * FROM WDJP.dj_artist_website WHERE sourceID=2;")
+        cursor.execute("SELECT * FROM WDJP.dj_artist_website WHERE sourceID=2 ;")
         data = cursor.fetchall()
         urls = [row[3].strip() for row in data]
         for url in urls:
@@ -115,7 +113,10 @@ class ArtistSpider(scrapy.Spider):
 
     def parse_biography(self,response):
         item = response.meta['item']
-        item['biography'] = response.xpath('//article')[0].extract()
+        try:
+            item['biography'] = response.xpath('//article')[0].extract()
+        except Exception as e:
+            self.logger.error("Method: (parse_biography) Error %s" % (e.args[0]))
         yield item
 
 
