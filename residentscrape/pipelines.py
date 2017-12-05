@@ -289,7 +289,7 @@ class ArtistSQLPipeLine(object):
         extendedDataTypeID = 0
         extendedDataID = 0
         try:
-            sql = "SELECT extendedDataTypeID from extended_data_type WHERE extendedDataTypeName='{}';".format(self.extendedTypeArtist[key])
+            sql = "SELECT extendedDataTypeID from extended_data_type WHERE extendedDataTypeName='{}';".format(key)
             results = self.cursor.execute(sql)
             if results > 0:
                 data = self.cursor.fetchone()
@@ -330,25 +330,25 @@ class ArtistSQLPipeLine(object):
             self.logger.error("Method: (insert_artist_extended_data) Error %d: %s" % (e.args[0], e.args[1]))
 
 
-def update_artist_extended_date(self,item,key, extendedDataTypeID, extendedDataID ):
-    now = datetime.datetime.now()
-    try:
-        self.cursor.execute("""UPDATE extended_data 
-                               SET extendedDataSourceType=%s, extendedDataSourceID=%s, 
-                               extendedDataTypeID=%s, extendedData1=%s, 
-                               refreshed=%s WHERE extendedDataID=%s""",
-                            (1,
-                             item['artistID'],
-                             extendedDataTypeID,
-                             item[self.extendedTypeArtist[key]],
-                             now,
-                             extendedDataID
-                             ))
+    def update_artist_extended_date(self,item,key, extendedDataTypeID, extendedDataID ):
+        now = datetime.datetime.now()
+        try:
+            self.cursor.execute("""UPDATE extended_data 
+                                   SET extendedDataSourceType=%s, extendedDataSourceID=%s, 
+                                   extendedDataTypeID=%s, extendedData1=%s, 
+                                   refreshed=%s WHERE extendedDataID=%s""",
+                                (1,
+                                 item['artistID'],
+                                 extendedDataTypeID,
+                                 item[self.extendedTypeArtist[key]],
+                                 now,
+                                 extendedDataID
+                                 ))
 
-        self.conn.commit()
+            self.conn.commit()
 
-    except(MySQLdb.Error) as e:
-        self.logger.error("Method: (update_artist_extended_date) Error %d: %s" % (e.args[0], e.args[1]))
+        except(MySQLdb.Error) as e:
+            self.logger.error("Method: (update_artist_extended_date) Error %d: %s" % (e.args[0], e.args[1]))
 
 
 class EventSQLPipeLine(object):
@@ -362,6 +362,9 @@ class EventSQLPipeLine(object):
         self.host = self.settings.get('HOST')
         self.sourceID = self.settings.get('SOURCE_ID')
         self.logger = logging.getLogger("EventSQLPipeline")
+        # extended data type mapping
+        self.extendedTypeEvent = {'facebook': 'eventFacebook', 'promotional':'eventPromotional', 'twitter':'eventTwitter'}
+        self.extendedDataSourceTypeDict = {}
 
     def open_spider(self, spider):
         self.conn = MySQLdb.connect(user=self.sqlusername, passwd=self.sqlpassword, db=self.db, host=self.host, charset="utf8",
@@ -396,6 +399,8 @@ class EventSQLPipeLine(object):
 
         if not self.check_artist_event_map(item,spider):
             self.insert_artist_event_map(item)
+
+        self.process_extended_data(item)
 
         return item
 
@@ -495,7 +500,6 @@ class EventSQLPipeLine(object):
                                     sourceVenueRef, eventName, 
                                     startDateText, startTimeText, endDateText, endTimeText, startDate, endDate,
                                     description, lineup, eventAdmin, eventPromoters, eventVenueAddress, followers, 
-                                    promotional, twitter, facebook,
                                     ticketinfo, price, ticketTier,
                                     sourceURL, sourceText, 
                                     created
@@ -505,7 +509,6 @@ class EventSQLPipeLine(object):
                                         %s, %s, 
                                         %s, %s, %s, %s, %s, %s,
                                         %s, %s, %s, %s, %s, %s, 
-                                        %s, %s, %s,
                                         %s, %s, %s,
                                         %s, %s,
                                         %s         
@@ -526,9 +529,9 @@ class EventSQLPipeLine(object):
                                  item['eventPromoters'].encode('utf-8'),
                                  item['eventVenueAddress'].encode('utf-8'),
                                  item['eventFollowers'],
-                                 item['eventPromotional'].encode('utf-8'),
-                                 item['eventTwitter'].encode('utf-8'),
-                                 item['eventFacebook'].encode('utf-8'),
+                                 # item['eventPromotional'].encode('utf-8'),
+                                 # item['eventTwitter'].encode('utf-8'),
+                                 # item['eventFacebook'].encode('utf-8'),
                                  item['eventTicketInfo'].encode('utf-8'),
                                  item['eventTicketPrice'].encode('utf-8'),
                                  item['eventTicketTier'].encode('utf-8'),
@@ -698,7 +701,6 @@ class EventSQLPipeLine(object):
                                 endDateText=%s, endTimeText=%s, startDate=%s, 
                                 endDate=%s, description=%s, lineup=%s, eventAdmin=%s, 
                                 eventPromoters=%s, eventVenueAddress=%s, followers=%s, 
-                                promotional=%s, twitter=%s, facebook=%s,
                                 ticketinfo=%s, price=%s, ticketTier=%s,
                                 sourceURL=%s, sourceText=%s,refreshed=%s 
                                 WHERE scrapeEventID=%s""",
@@ -718,9 +720,9 @@ class EventSQLPipeLine(object):
                                  item['eventPromoters'].encode('utf-8'),
                                  item['eventVenueAddress'].encode('utf-8'),
                                  item['eventFollowers'],
-                                 item['eventPromotional'].encode('utf-8'),
-                                 item['eventTwitter'].encode('utf-8'),
-                                 item['eventFacebook'].encode('utf-8'),
+                                 # item['eventPromotional'].encode('utf-8'),
+                                 # item['eventTwitter'].encode('utf-8'),
+                                 # item['eventFacebook'].encode('utf-8'),
                                  item['eventTicketInfo'].encode('utf-8'),
                                  item['eventTicketPrice'].encode('utf-8'),
                                  item['eventTicketTier'].encode('utf-8'),
@@ -813,4 +815,83 @@ class EventSQLPipeLine(object):
 
         except(MySQLdb.Error) as e:
             self.logger.error("Method: (update_promoter) Error %d: %s" % (e.args[0], e.args[1]))
+
+
+    ## Process Extended Data
+    def process_extended_data(self, item):
+        extendedDataSourceType, extendedDataSourceID_Key = 3, 'scrapeEventID'
+        mappings = self.extendedTypeEvent
+        for tableKey, itemKey in mappings.items():
+            if len(item[itemKey]) >0:
+                extendedDataTypeID, extendedDataID = self.check_if_extended_exist(item, tableKey,extendedDataSourceType )
+                if extendedDataID == 0:
+                    self.insert_extended_data(item, itemKey, extendedDataSourceType, extendedDataSourceID_Key, extendedDataTypeID)
+                else:
+                    self.update_extended_data(item, itemKey, extendedDataSourceType, extendedDataSourceID_Key, extendedDataTypeID, extendedDataID)
+
+    def check_if_extended_exist(self, item, tableKey, extendedDataSourceType):
+        extendedDataTypeID = 0
+        extendedDataID = 0
+        try:
+            sql = "SELECT extendedDataTypeID from extended_data_type WHERE extendedDataTypeName='{}';".format(
+                tableKey)
+            results = self.cursor.execute(sql)
+            if results > 0:
+                data = self.cursor.fetchone()
+                extendedDataTypeID = data[0]
+
+            sql = "SELECT extendedDataID FROM extended_data WHERE extendedDataSourceType={} and extendedDataSourceID={} and extendedDataTypeID={} ;".format(
+                extendedDataSourceType, item['scrapeEventID'], extendedDataTypeID)
+            results = self.cursor.execute(sql)
+            if results > 0:
+                data = self.cursor.fetchone()
+                extendedDataID = data[0]
+        except(MySQLdb.Error) as e:
+            self.logger.error("Method: (check_if_extended_exist) Error %d: %s" % (e.args[0], e.args[1]))
+        return extendedDataTypeID, extendedDataID
+
+    def insert_extended_data(self, item, itemKey, extendedDataSourceType,extendedDataSourceID_Key, extendedDataTypeID):
+        now = datetime.datetime.now()
+        try:
+            self.cursor.execute("""INSERT INTO extended_data (
+                                                   extendedDataSourceType, extendedDataSourceID, 
+                                                   extendedDataTypeID, extendedData1, 
+                                                   created
+                                                       )  
+                                                   VALUES (
+                                                       %s, %s, 
+                                                       %s, %s, 
+                                                       %s                               
+                                                    )""",
+                                (extendedDataSourceType,
+                                 item[extendedDataSourceID_Key],
+                                 extendedDataTypeID,
+                                 item[itemKey],
+                                 now
+                                 ))
+
+            self.conn.commit()
+
+        except(MySQLdb.Error) as e:
+            self.logger.error("Method: (insert_extended_data) Error %d: %s" % (e.args[0], e.args[1]))
+
+    def update_extended_data(self, item, itemKey, extendedDataSourceType, extendedDataSourceID_Key, extendedDataTypeID, extendedDataID):
+        now = datetime.datetime.now()
+        try:
+            self.cursor.execute("""UPDATE extended_data 
+                                      SET extendedDataSourceType=%s, extendedDataSourceID=%s, 
+                                      extendedDataTypeID=%s, extendedData1=%s, 
+                                      refreshed=%s WHERE extendedDataID=%s""",
+                                (extendedDataSourceType,
+                                 item[extendedDataSourceID_Key],
+                                 extendedDataTypeID,
+                                 item[itemKey],
+                                 now,
+                                 extendedDataID
+                                 ))
+
+            self.conn.commit()
+
+        except(MySQLdb.Error) as e:
+            self.logger.error("Method: (update_artist_extended_date) Error %d: %s" % (e.args[0], e.args[1]))
 
