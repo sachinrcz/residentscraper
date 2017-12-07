@@ -96,6 +96,5 @@ ITEM_PIPELINES = {
 SQLUSERNAME = 'root'
 DATABASE = 'WDJPNew'
 HOST = 'localhost'
-SOURCE_ID = '2'
 # LOG_STDOUT = True
 # LOG_FILE = '/home/sachin/Sachin/upwork/residentscrape/tmp/scrapy_output.txt'

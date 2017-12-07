@@ -7,21 +7,25 @@ from bs4 import BeautifulSoup
 import MySQLdb
 import os
 import sys
+import datetime
 from scrapy.utils.project import get_project_settings
 
-class EventSpider(scrapy.Spider):
+class ResidentEventSpider(scrapy.Spider):
 
-    name = "EventSpider"
+    name = "ResidentEventSpider"
 
     domain = "https://www.residentadvisor.net"
 
+    custom_settings = {
+        'SOURCE_ID': '2',
+    }
 
     def start_requests(self):
         self.custom_settings = get_project_settings()
         password = os.environ.get('SECRET_KEY')
         db = MySQLdb.connect(host=self.custom_settings['HOST'], port=3306, user=self.custom_settings['SQLUSERNAME'], passwd=password, db=self.custom_settings['DATABASE'])
         cursor = db.cursor()
-        cursor.execute('SELECT sourceArtistRef, sourceURL FROM WDJPNew.scrape_Artists LIMIT 10;')
+        cursor.execute('SELECT sourceArtistRef, sourceURL FROM WDJPNew.scrape_Artists LIMIT 100;')
         rows = cursor.fetchall()
         # urls = [row[0]+'/dates' for row in data]
         for row in rows:
@@ -152,6 +156,16 @@ class EventSpider(scrapy.Spider):
             item['eventFollowers'] = int(item['eventFollowers'])
         except:
             item['eventFollowers'] = 0
+
+        ## Convert Date
+        try:
+            item['startDate'] = datetime.datetime.strptime(item['eventStartDate'].strip(), '%d %b %Y').date()
+        except:
+            item['startDate'] = None
+        try:
+            item['endDate'] = datetime.datetime.strptime(item['eventEndDate'].strip(), '%d %b %Y').date()
+        except:
+            item['endDate'] = None
 
         # Event Lineup and description
         try:

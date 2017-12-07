@@ -9,20 +9,24 @@ import os
 from scrapy.utils.project import get_project_settings
 import logging
 
-class ArtistSpider(scrapy.Spider):
+class ResidentArtistSpider(scrapy.Spider):
 
-    name = "ArtistSpider"
+    name = "ResidentArtistSpider"
 
     domain = "https://www.residentadvisor.net"
 
     logger = logging.getLogger("ArtistSpider")
+
+    custom_settings = {
+        'SOURCE_ID': '2',
+    }
 
     def start_requests(self):
         self.custom_settings = get_project_settings()
         password = os.environ.get('SECRET_KEY')
         db = MySQLdb.connect(host=self.custom_settings['HOST'], port=3306, user=self.custom_settings['SQLUSERNAME'], passwd=password, db=self.custom_settings['DATABASE'])
         cursor = db.cursor()
-        cursor.execute("SELECT * FROM WDJP.dj_artist_website WHERE sourceID=2 ;")
+        cursor.execute("SELECT * FROM WDJP.dj_artist_website WHERE sourceID=2 LIMIT 1000 ;")
         data = cursor.fetchall()
         urls = [row[3].strip() for row in data]
         for url in urls:
@@ -43,9 +47,12 @@ class ArtistSpider(scrapy.Spider):
         item = ArtistItem()
         for field in item.fields:
             item.setdefault(field, '')
-        item['sourceRef'] = response.url.split('/')[-1].strip()
-        if len(item['sourceRef']) < 1:
-            item['sourceRef'] = response.url.split('/')[-2].strip()
+        try:
+            item['sourceRef'] = response.url.split('/')[-1].strip()
+            if len(item['sourceRef']) < 1:
+                item['sourceRef'] = response.url.split('/')[-2].strip()
+        except:
+            pass
         try:
             item['name'] = response.css('div#sectionHead').xpath('.//h1/text()').extract()[0]
         except:
@@ -69,35 +76,38 @@ class ArtistSpider(scrapy.Spider):
                 continue
 
             if 'internet' in header:
-                links = detail.xpath('.//a')
-                for link in links:
-                    text = link.xpath('.//text()').extract()[0]
-                    href = link.xpath('.//@href').extract()[0]
-                    if 'Website' in text:
-                        item['website'] = href
-                        continue
-                    if 'Email' in text:
-                        href = href.replace('/cdn-cgi/l/email-protection#','').strip()
-                        item['email'] = self.decodeEmail(href)
-                        continue
-                    if 'Facebook' in text:
-                        item['facebook'] = href
-                        continue
-                    if 'Instagram' in text:
-                        item['instagram'] = href
-                        continue
-                    if 'Twitter' in text:
-                        item['twitter'] = href
-                        continue
-                    if 'SoundCloud' in text:
-                        item['soundcloud'] = href
-                        continue
-                    if 'Band' in text:
-                        item['bandcamp'] = href
-                        continue
-                    if 'Discog' in text:
-                        item['discog'] = href
-                        continue
+                try:
+                    links = detail.xpath('.//a')
+                    for link in links:
+                        text = link.xpath('.//text()').extract()[0]
+                        href = link.xpath('.//@href').extract()[0]
+                        if 'Website' in text:
+                            item['website'] = href
+                            continue
+                        if 'Email' in text:
+                            href = href.replace('/cdn-cgi/l/email-protection#','').strip()
+                            item['email'] = self.decodeEmail(href)
+                            continue
+                        if 'Facebook' in text:
+                            item['facebook'] = href
+                            continue
+                        if 'Instagram' in text:
+                            item['instagram'] = href
+                            continue
+                        if 'Twitter' in text:
+                            item['twitter'] = href
+                            continue
+                        if 'SoundCloud' in text:
+                            item['soundcloud'] = href
+                            continue
+                        if 'Band' in text:
+                            item['bandcamp'] = href
+                            continue
+                        if 'Discog' in text:
+                            item['discog'] = href
+                            continue
+                except:
+                    pass
 
                 continue
         try:

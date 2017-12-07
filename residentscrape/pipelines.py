@@ -142,17 +142,22 @@ import logging
 # Main Artist Data pipeline
 class ArtistSQLPipeLine(object):
 
-    def __init__(self):
+    def __init__(self,crawlerSetting):
         self.settings = get_project_settings()
         self.sqlusername = self.settings.get('SQLUSERNAME')
         self.sqlpassword = os.environ.get('SECRET_KEY')
         self.db = self.settings.get('DATABASE')
         self.host = self.settings.get('HOST')
-        self.sourceID = self.settings.get('SOURCE_ID')
+        self.sourceID = crawlerSetting.get('SOURCE_ID')
         self.logger = logging.getLogger("ArtistSQLPipeline")
         # extended data type mapping
-        self.extendedTypeArtist = {'website': 'website'}
+        self.extendedTypeArtist = {'website': 'website','facebook':'facebook','twitter':'twitter','instagram':'instagram',
+                                   'discogs':'discog','soundcloud':'soundcloud','bandcamp':'bandcamp'}
 
+    @classmethod
+    def from_crawler(cls, crawler):
+        settings = crawler.settings
+        return cls(settings)
 
     def open_spider(self, spider):
         self.conn = MySQLdb.connect(user=self.sqlusername, passwd=self.sqlpassword, db=self.db, host=self.host, charset="utf8",
@@ -170,13 +175,13 @@ class ArtistSQLPipeLine(object):
         else:
             self.update_artist(item)
 
-        # self.process_artist_extended_data(item)
+        self.process_artist_extended_data(item)
         return item
 
 
     def isArtist(self,item):
         try:
-            sql = "SELECT artistID FROM scrape_Artists WHERE sourceArtistRef='{}' ;".format(str(item['sourceRef']))
+            sql = "SELECT artistID FROM scrape_Artists WHERE sourceArtistRef='{}' and sourceID={};".format(str(item['sourceRef']),self.sourceID)
             results = self.cursor.execute(sql)
             if results > 0:
                 data = self.cursor.fetchone()
@@ -194,13 +199,11 @@ class ArtistSQLPipeLine(object):
                                         WPArtistID, name, realName, 
                                         aliases, country, biography,
                                         sourceURL, sourceText, followers, 
-                                        website, email, facebook, soundcloud,
-                                        twitter, instagram, discogs, bandcamp, 
                                         created
                                             )  
                                         VALUES (
-                                            %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                                            %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                                            %s, %s, %s, %s, 
+                                             %s, %s, %s, %s, %s, %s,
                                             %s, %s, %s                               
                                          )""",
                                 (self.sourceID,
@@ -215,14 +218,14 @@ class ArtistSQLPipeLine(object):
                                  item['sourceURL'].encode('utf-8'),
                                  item['sourceText'].encode('utf-8'),
                                  item['followers'],
-                                 item['website'].encode('utf-8'),
-                                 item['email'].encode('utf-8'),
-                                 item['facebook'].encode('utf-8'),
-                                 item['soundcloud'].encode('utf-8'),
-                                 item['twitter'].encode('utf-8'),
-                                 item['instagram'].encode('utf-8'),
-                                 item['discog'].encode('utf-8'),
-                                 item['bandcamp'].encode('utf-8'),
+                                 # item['website'].encode('utf-8'),
+                                 # item['email'].encode('utf-8'),
+                                 # item['facebook'].encode('utf-8'),
+                                 # item['soundcloud'].encode('utf-8'),
+                                 # item['twitter'].encode('utf-8'),
+                                 # item['instagram'].encode('utf-8'),
+                                 # item['discog'].encode('utf-8'),
+                                 # item['bandcamp'].encode('utf-8'),
                                  now
                                  ))
 
@@ -242,8 +245,6 @@ class ArtistSQLPipeLine(object):
                                    WPArtistID=%s, name=%s, realName=%s, 
                                    aliases=%s, country=%s, biography=%s,
                                    sourceURL=%s, sourceText=%s, followers=%s, 
-                                   website=%s, email=%s, facebook=%s, soundcloud=%s,
-                                   twitter=%s, instagram=%s, discogs=%s, bandcamp=%s,
                                    refreshed=%s WHERE artistID=%s """,
                                 (self.sourceID,
                                  item['sourceRef'],
@@ -257,14 +258,14 @@ class ArtistSQLPipeLine(object):
                                  item['sourceURL'].encode('utf-8'),
                                  item['sourceText'].encode('utf-8'),
                                  item['followers'],
-                                 item['website'].encode('utf-8'),
-                                 item['email'].encode('utf-8'),
-                                 item['facebook'].encode('utf-8'),
-                                 item['soundcloud'].encode('utf-8'),
-                                 item['twitter'].encode('utf-8'),
-                                 item['instagram'].encode('utf-8'),
-                                 item['discog'].encode('utf-8'),
-                                 item['bandcamp'].encode('utf-8'),
+                                 # item['website'].encode('utf-8'),
+                                 # item['email'].encode('utf-8'),
+                                 # item['facebook'].encode('utf-8'),
+                                 # item['soundcloud'].encode('utf-8'),
+                                 # item['twitter'].encode('utf-8'),
+                                 # item['instagram'].encode('utf-8'),
+                                 # item['discog'].encode('utf-8'),
+                                 # item['bandcamp'].encode('utf-8'),
                                  now,
                                  item['artistID']
                                  ))
@@ -277,11 +278,12 @@ class ArtistSQLPipeLine(object):
 
     def process_artist_extended_data(self,item):
         for key,value in self.extendedTypeArtist.items():
-            extendedDataTypeID, extendedDataID = self.check_if_extended_exist(item,key)
-            if extendedDataID == 0:
-                self.insert_artist_extended_data(item, key,  extendedDataTypeID)
-            else:
-                self.update_artist_extended_data(item,key, extendedDataTypeID, extendedDataID)
+            if len(item[value]) > 0:
+                extendedDataTypeID, extendedDataID = self.check_if_extended_exist(item,key)
+                if extendedDataID == 0:
+                    self.insert_artist_extended_data(item, key,  extendedDataTypeID)
+                else:
+                    self.update_artist_extended_data(item,key, extendedDataTypeID, extendedDataID)
 
 
 
@@ -330,7 +332,7 @@ class ArtistSQLPipeLine(object):
             self.logger.error("Method: (insert_artist_extended_data) Error %d: %s" % (e.args[0], e.args[1]))
 
 
-    def update_artist_extended_date(self,item,key, extendedDataTypeID, extendedDataID ):
+    def update_artist_extended_data(self,item,key, extendedDataTypeID, extendedDataID ):
         now = datetime.datetime.now()
         try:
             self.cursor.execute("""UPDATE extended_data 
@@ -353,18 +355,23 @@ class ArtistSQLPipeLine(object):
 
 class EventSQLPipeLine(object):
 
-    def __init__(self):
+    def __init__(self,crawlerSetting):
 
         self.settings = get_project_settings()
         self.sqlusername = self.settings.get('SQLUSERNAME')
         self.sqlpassword = os.environ.get('SECRET_KEY')
         self.db = self.settings.get('DATABASE')
         self.host = self.settings.get('HOST')
-        self.sourceID = self.settings.get('SOURCE_ID')
+        self.sourceID = crawlerSetting.get('SOURCE_ID')
         self.logger = logging.getLogger("EventSQLPipeline")
         # extended data type mapping
         self.extendedTypeEvent = {'facebook': 'eventFacebook', 'promotional':'eventPromotional', 'twitter':'eventTwitter'}
         self.extendedDataSourceTypeDict = {}
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        settings = crawler.settings
+        return cls(settings)
 
     def open_spider(self, spider):
         self.conn = MySQLdb.connect(user=self.sqlusername, passwd=self.sqlpassword, db=self.db, host=self.host, charset="utf8",
@@ -422,7 +429,7 @@ class EventSQLPipeLine(object):
 
     def isEvent(self,item):
         try:
-            sql = "SELECT scrapeEventID FROM scrape_Events WHERE sourceEventRef=" + str(item['eventSourceRef']) + ";"
+            sql = "SELECT scrapeEventID FROM scrape_Events WHERE sourceEventRef={} and sourceID={};".format(item['eventSourceRef'], self.sourceID)
             results = self.cursor.execute(sql)
             if results > 0:
                 data = self.cursor.fetchone()
@@ -487,14 +494,6 @@ class EventSQLPipeLine(object):
     def insert_event(self,item):
         now = datetime.datetime.now()
         try:
-            try:
-                item['startDate'] = datetime.datetime.strptime(item['eventStartDate'].strip(), '%d %b %Y').date()
-            except:
-                item['startDate'] = None
-            try:
-                item['endDate'] = datetime.datetime.strptime(item['eventEndDate'].strip(), '%d %b %Y').date()
-            except:
-                item['endDate'] = None
             self.cursor.execute("""INSERT INTO scrape_Events (
                                     sourceID, sourceEventRef,
                                     sourceVenueRef, eventName, 
@@ -686,14 +685,6 @@ class EventSQLPipeLine(object):
     def update_event(self,item):
         now = datetime.datetime.now()
         try:
-            try:
-                item['startDate'] = datetime.datetime.strptime(item['eventStartDate'].strip(), '%d %b %Y').date()
-            except:
-                item['startDate'] = None
-            try:
-                item['endDate'] = datetime.datetime.strptime(item['eventEndDate'].strip(), '%d %b %Y').date()
-            except:
-                item['endDate'] = None
             self.cursor.execute("""UPDATE scrape_Events 
                                 SET sourceID=%s, sourceEventRef=%s,
                                 sourceVenueRef=%s, eventName=%s, 

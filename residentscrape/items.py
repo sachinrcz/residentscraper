@@ -183,3 +183,4 @@ class ResidentItem(scrapy.Item):
 
     def __repr__(self):
         return repr({"Event Name":self['eventName']})
+
