@@ -25,25 +25,25 @@ class BandsInTownSpider(scrapy.Spider):
 
     def start_requests(self):
         self.custom_settings = get_project_settings()
-        # password = os.environ.get('SECRET_KEY')
-        # db = MySQLdb.connect(host=self.custom_settings['HOST'], port=3306, user=self.custom_settings['SQLUSERNAME'], passwd=password, db=self.custom_settings['DATABASE'])
-        # cursor = db.cursor()
-        # cursor.execute("SELECT * FROM WDJP.dj_artist_website WHERE sourceID=1 LIMIT 10 ;")
-        # data = cursor.fetchall()
-        # urls = [row[3].strip() for row in data]
-        # for url in urls:
-        #     url = url.replace('http://','https://').strip()
-        #     if 'https' in url and 'bandsintown' in url:
-        #         request = scrapy.Request(url=url, callback=self.parse)
-        #         yield request
-        #     else:
-        #         if len(url) > 6 and 'bandsintown' in url:
-        #             request = scrapy.Request(url='https://'+url, callback=self.parse)
-        #             yield request
+        password = os.environ.get('SECRET_KEY')
+        db = MySQLdb.connect(host=self.custom_settings['HOST'], port=3306, user=self.custom_settings['SQLUSERNAME'], passwd=password, db=self.custom_settings['DATABASE'])
+        cursor = db.cursor()
+        cursor.execute("SELECT * FROM WDJP.dj_artist_website WHERE sourceID=1 LIMIT 10;")
+        data = cursor.fetchall()
+        urls = [row[3].strip() for row in data]
+        for url in urls:
+            url = url.replace('http://','https://').strip()
+            if 'https' in url and 'bandsintown' in url:
+                request = scrapy.Request(url=url, callback=self.parse)
+                yield request
+            else:
+                if len(url) > 6 and 'bandsintown' in url:
+                    request = scrapy.Request(url='https://'+url, callback=self.parse)
+                    yield request
         ##For testing with single start url
-        url = 'https://www.bandsintown.com/Bicep'
-        request = scrapy.Request(url=url, callback=self.parse)
-        yield request
+        # url = 'https://www.bandsintown.com/Bicep'
+        # request = scrapy.Request(url=url, callback=self.parse)
+        # yield request
 
     def parse(self,response):
         item = ArtistItem()
@@ -68,12 +68,21 @@ class BandsInTownSpider(scrapy.Spider):
         except:
             item['followers'] = 0
 
+        try:
+            names = response.css('section.content-container').xpath('.//a//text()').extract()
+            links = response.css('section.content-container').xpath('.//a/@href').extract()
+            links = [link.replace('/','').strip() for link in links]
+            item['similarArtists'] = dict(zip(links,names))
+        except:
+            pass
+
         yield item
 
         try:
             eventlinks = response.css('div.events-table').xpath('.//tr/@data-event-link').extract()
             for url in eventlinks:
                 request = scrapy.Request(url=url, callback=self.parse_event, dont_filter=True)
+                request.meta['artistSourceRef'] = item['sourceRef']
                 yield request
         except Exception as e:
             self.logger.error("Method: (parse) Error during extracting event links %s" % (e.args[0]))
@@ -84,8 +93,17 @@ class BandsInTownSpider(scrapy.Spider):
         item = ResidentItem()
         for field in item.fields:
             item.setdefault(field, '')
+        item['venueCapacity'] = 0
+        item['eventFollowers'] = 0
+        item['venueFollowers'] = 0
+        item['promoterFollowers'] = 0
+        item['artistSourceRef'] = response.meta['artistSourceRef']
         item['eventSourceURL'] = response.url
         item['eventSourceText'] = response.text
+        try:
+            item['eventSourceRef'] = response.url.split('/')[4].split('-')[0]
+        except:
+            pass
 
         ## Extract Date Time
         try:
@@ -109,11 +127,83 @@ class BandsInTownSpider(scrapy.Spider):
         except:
             item['endDate'] = None
 
+        ## Event Followers/ RSVP
         try:
-            item['biography'] = response.xpath('//article')[0].extract()
+            item['eventFollowers'] = int(response.css('div.rsvp-count').css('span.count::text').extract()[0].strip())
+        except:
+            pass
+
+        ## Event LineUp
+        try:
+            item['eventLineup'] = ''.join(response.css('strong.lineup-performers').xpath('.//span//text()').extract())
+        except:
+            pass
+
+        ## Event Description
+        try:
+            item['eventDescription'] = response.css('div.event-description::text').extract()[0].strip()
+        except:
+            pass
+
+
+        ## Venue Information
+        try:
+            item['venueName'] = response.css('h2.venue-name').xpath('.//a/text()').extract()[0].strip()
         except Exception as e:
-            self.logger.error("Method: (parse_biography) Error %s" % (e.args[0]))
+            pass
+
+        try:
+            item['venueSourceURL'] = response.css('h2.venue-name').xpath('.//a/@href').extract()[0].strip()
+            item['venueSourceRef'] = item['venueSourceURL'].split('/')[4].split('-')[0]
+        except:
+            pass
+
+
+        ## Address information
+        try:
+            item['venueAddress'] = response.xpath('//h3[contains(@itemprop,"streetAddress")]//text()').extract()[0].strip()
+        except:
+            pass
+        try:
+            item['venueAddress'] = response.xpath('//h3[contains(@itemprop,"streetAddress")]//text()').extract()[0].strip()
+        except:
+            pass
+
+        try:
+            locationURL = self.domain+response.css('h2.venue-location').xpath('.//a/@href').extract()[0].strip()
+            item['venueCity'] = response.xpath('//span[contains(@itemprop,"addressLocality")]//text()').extract()[0].strip()
+        except:
+            pass
+
+        try:
+            item['venueCountry'] = response.xpath('//span[contains(@itemprop,"addressCountry")]//text()').extract()[0].strip()
+        except:
+            pass
+
+        if len(item['venueSourceURL']) > 0 :
+            request = scrapy.Request(url=item['venueSourceURL'],callback=self.parse_venue, dont_filter=True)
+            request.meta['item'] = item
+            yield request
+        else:
+            yield item
+
+
+    def parse_venue(self,response):
+        item = response.meta['item']
+        item['venueSourceText'] = response.text
+
+        try:
+            item['venuePhone'] = response.css('div.venue-phone::text').extract()[0]
+        except:
+            pass
+
+        try:
+            item['venueGoogleMap'] = response.css('div.sidebar-image').xpath('.//a/@href').extract()[0]
+            cords =  item['venueGoogleMap'].split('ll=')[1].split('&')[0].split('%2C')
+            item['venueGeoLat'] = cords[0]
+            item['venueGeoLong'] = cords[1]
+
+        except:
+            pass
+
         yield item
-
-
-

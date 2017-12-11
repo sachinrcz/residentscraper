@@ -96,6 +96,7 @@ class ArtistItem(scrapy.Item):
     soundcloud = scrapy.Field()
     sourceURL = scrapy.Field()
     sourceText = scrapy.Field()
+    similarArtists = scrapy.Field()
 
     def __repr__(self):
         """only print out attr1 after exiting the Pipeline"""
@@ -143,7 +144,7 @@ class ResidentItem(scrapy.Item):
     venueCity = scrapy.Field()
     venueCountry = scrapy.Field()
     venueGeoLat = scrapy.Field()
-    venueGeoLang = scrapy.Field()
+    venueGeoLong = scrapy.Field()
     venueAka = scrapy.Field()
     venuePhone = scrapy.Field()
     venueDescription = scrapy.Field()
@@ -157,6 +158,7 @@ class ResidentItem(scrapy.Item):
     venueInstagram = scrapy.Field()
     venueSourceURL = scrapy.Field()
     venueSourceText = scrapy.Field()
+    venueLocationURL = scrapy.Field()                     # Found in bandsintown
 
 
     ## Fields from Club/Promoter page

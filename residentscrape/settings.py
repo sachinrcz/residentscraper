@@ -54,9 +54,9 @@ DEFAULT_REQUEST_HEADERS = {
 
 # Enable or disable downloader middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    'residentscrape.middlewares.MyCustomDownloaderMiddleware': 543,
-#}
+# DOWNLOADER_MIDDLEWARES = {
+#    'residentscrape.middlewares.ProxyMiddleware': 543,
+# }
 
 # Enable or disable extensions
 # See http://scrapy.readthedocs.org/en/latest/topics/extensions.html
@@ -96,5 +96,8 @@ ITEM_PIPELINES = {
 SQLUSERNAME = 'root'
 DATABASE = 'WDJPNew'
 HOST = 'localhost'
+RA_MODE = 'history'                                 # mode 1 for upcoming and mode 2 for history run
+BIT_MODE = 'upcoming'                                # mode 1 for upcoming and mode 2 for history run
 # LOG_STDOUT = True
-# LOG_FILE = '/home/sachin/Sachin/upwork/residentscrape/tmp/scrapy_output.txt'
+# LOG_FILE = '/home/sachin/Sachin/upwork/residentscrape/tmp/scrapy_RA_output.txt'
+

@@ -8,6 +8,7 @@ import MySQLdb
 import os
 import sys
 import datetime
+import logging
 from scrapy.utils.project import get_project_settings
 
 class ResidentEventSpider(scrapy.Spider):
@@ -20,12 +21,14 @@ class ResidentEventSpider(scrapy.Spider):
         'SOURCE_ID': '2',
     }
 
+    logger = logging.getLogger("ResidentEventSpider")
+
     def start_requests(self):
         self.custom_settings = get_project_settings()
         password = os.environ.get('SECRET_KEY')
         db = MySQLdb.connect(host=self.custom_settings['HOST'], port=3306, user=self.custom_settings['SQLUSERNAME'], passwd=password, db=self.custom_settings['DATABASE'])
         cursor = db.cursor()
-        cursor.execute('SELECT sourceArtistRef, sourceURL FROM WDJPNew.scrape_Artists LIMIT 100;')
+        cursor.execute('SELECT sourceArtistRef, sourceURL FROM WDJPNew.scrape_Artists WHERE sourceID={} LIMIT 10;'.format('2'))
         rows = cursor.fetchall()
         # urls = [row[0]+'/dates' for row in data]
         for row in rows:
@@ -38,17 +41,39 @@ class ResidentEventSpider(scrapy.Spider):
         ##For testing with single start url
         # url = 'https://www.residentadvisor.net/dj/astrix/dates'
         # request = scrapy.Request(url=url, callback=self.parse)
+        # request.meta['artistSourceRef'] = 'astrix'
         # yield request
 
     def parse(self, response):
-        temp =  response.css('ul.mobile-pr24-tablet-desktop-pr8')[0].xpath('.//li/h1/text()')
-        if len(temp)>0 and 'Upcoming' in temp[0].extract():
-            upcomingselector = response.css('ul.mobile-pr24-tablet-desktop-pr8')[0].xpath('.//li')[0]
-            events = upcomingselector.xpath('.//a[contains(@itemprop, "url")]/@href').extract()
-            for event in events:
-                request = scrapy.Request(url= self.domain + event,callback=self.parse_event, dont_filter=True)
-                request.meta['artistSourceRef'] = response.meta['artistSourceRef']
-                yield request
+        mode = self.custom_settings['RA_MODE']
+        urls = []
+        if 'upcoming' in mode:
+            temp = response.css('ul.mobile-pr24-tablet-desktop-pr8')[0].xpath('.//li/h1/text()')
+            if len(temp)>0 and 'Upcoming' in temp[0].extract():
+                upcomingselector = response.css('ul.mobile-pr24-tablet-desktop-pr8')[0].xpath('.//li')[0]
+                events = upcomingselector.xpath('.//a[contains(@itemprop, "url")]/@href').extract()
+                urls = [self.domain + event for event in events]
+                for url in urls:
+                    request = scrapy.Request(url=url, callback=self.parse_event, dont_filter=True)
+                    request.meta['artistSourceRef'] = response.meta['artistSourceRef']
+                    yield request
+        else:
+            if 'history' in mode:
+                temp = response.css('div.fl')[0].xpath('.//li/a/@href').extract()
+                urls = [self.domain + x for x in temp]
+                for url in urls:
+                    request = scrapy.Request(url=url, callback=self.extract_hist_events, dont_filter=True)
+                    request.meta['artistSourceRef'] = response.meta['artistSourceRef']
+                    yield request
+
+
+    def extract_hist_events(self, response):
+        upcomingselector = response.css('ul.mobile-pr24-tablet-desktop-pr8')[0].xpath('.//li')[0]
+        events = upcomingselector.xpath('.//a[contains(@itemprop, "url summary")]/@href').extract()
+        for event in events:
+            request = scrapy.Request(url=self.domain + event, callback=self.parse_event, dont_filter=True)
+            request.meta['artistSourceRef'] = response.meta['artistSourceRef']
+            yield request
 
 
     def parse_event(self,response):
@@ -61,6 +86,10 @@ class ResidentEventSpider(scrapy.Spider):
         item['eventFollowers'] = 0
         item['venueFollowers'] = 0
         item['promoterFollowers'] = 0
+        item['scrapeVenueID'] = -1
+        item['venueGeoLat'] = None
+        item['venueGeoLong'] = None
+        item['venueSourceRef'] = '-1'
 
         item['eventSourceURL'] = response.url
         try:
@@ -111,8 +140,16 @@ class ResidentEventSpider(scrapy.Spider):
                             item['eventVenueURL'] = self.domain + href
                 except:
                     pass
-                if len(item['eventVenueURL']) == 0 :
-                    item['eventVenueAddress'] = ', '.join(list[1:])
+                try:
+                    if len(item['eventVenueURL']) == 0 :
+                        item['eventVenueAddress'] = ', '.join(list[1:])
+                        item['venueAddress'] = ', '.join(list[1:])
+                    temp = detail.xpath('.//a')[0].xpath('.//@href').extract()[0]
+                    if 'local' in temp:
+                        item['venueCountry'] = detail.xpath('.//a')[0].xpath('.//text()').extract()[0].replace('\xa0',
+                                                                                                     '').strip()
+                except:
+                    pass
                 continue
 
             if 'internet' in header:
@@ -132,7 +169,10 @@ class ResidentEventSpider(scrapy.Spider):
                 continue
 
             if 'Cost' in header:
-                item['eventTicketPrice'] = list[1].strip()
+                try:
+                    item['eventTicketPrice'] = list[1].strip()
+                except:
+                    pass
                 continue
 
             if 'Promoter' in header:
@@ -147,7 +187,10 @@ class ResidentEventSpider(scrapy.Spider):
                 continue
 
             if 'age' in header:
-                item['eventMinAge'] = list[1].strip()
+                try:
+                    item['eventMinAge'] = list[1].strip()
+                except:
+                    pass
                 continue
 
         # Members Count
@@ -204,12 +247,18 @@ class ResidentEventSpider(scrapy.Spider):
             item['eventTicketTier'] = temp[1].strip()
         except:
             pass
+
+
         try:
-            item['venueSourceRef'] = item['eventVenueURL'].split('id=')[-1].strip()
+            item['venueCity'] = response.css('li.but.circle-left.bbox')[0].xpath('.//a//text()').extract()[0]
         except:
             pass
 
         if len(item['eventVenueURL']) > 0:
+            try:
+                item['venueSourceRef'] = item['eventVenueURL'].split('id=')[-1].strip()
+            except:
+                pass
             request = scrapy.Request(url=item['eventVenueURL'],callback=self.parse_venue, dont_filter=True)
             request.meta['item'] = item
             yield request
@@ -363,7 +412,10 @@ class ResidentEventSpider(scrapy.Spider):
                 continue
 
             if 'Phone' in header:
-                item['promoterPhone'] = list[1].strip()
+                try:
+                    item['promoterPhone'] = list[1].strip()
+                except:
+                    pass
                 continue
 
             if 'internet' in header:
