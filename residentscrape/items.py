@@ -184,5 +184,5 @@ class ResidentItem(scrapy.Item):
 
 
     def __repr__(self):
-        return repr({"Event Name":self['eventName']})
+        return repr({"Event Name":self['eventName'],"Venue Name":self['venueName']})
 

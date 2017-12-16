@@ -19,7 +19,7 @@ NEWSPIDER_MODULE = 'residentscrape.spiders'
 #USER_AGENT = 'residentscrape (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
@@ -96,8 +96,11 @@ ITEM_PIPELINES = {
 SQLUSERNAME = 'root'
 DATABASE = 'WDJPNew'
 HOST = 'localhost'
-RA_MODE = 'history'                                 # mode 1 for upcoming and mode 2 for history run
-BIT_MODE = 'upcoming'                                # mode 1 for upcoming and mode 2 for history run
-# LOG_STDOUT = True
-# LOG_FILE = '/home/sachin/Sachin/upwork/residentscrape/tmp/scrapy_RA_output.txt'
+RA_MODE = 'upcoming'                                 # upcoming or history
+BIT_MODE = 'upcoming'                                # upcoming or history
 
+# LOG_STDOUT = False
+# LOG_FILE = '/home/sachin/Sachin/upwork/residentscrape/log/scrape_run_facebook.log'
+FACEBOOK_APP_ID='127062923380'
+FACEBOOK_APP_SECRET='0a2b51bc116940af57c65edc58a4c047'
+FACEBOOK_API_USE_MODE=1                              # mode 1 for single request and mode 2 for two requests

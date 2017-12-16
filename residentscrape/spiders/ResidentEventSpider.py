@@ -28,7 +28,7 @@ class ResidentEventSpider(scrapy.Spider):
         password = os.environ.get('SECRET_KEY')
         db = MySQLdb.connect(host=self.custom_settings['HOST'], port=3306, user=self.custom_settings['SQLUSERNAME'], passwd=password, db=self.custom_settings['DATABASE'])
         cursor = db.cursor()
-        cursor.execute('SELECT sourceArtistRef, sourceURL FROM WDJPNew.scrape_Artists WHERE sourceID={} LIMIT 10;'.format('2'))
+        cursor.execute('SELECT sourceArtistRef, sourceURL FROM WDJPNew.scrape_Artists WHERE sourceID={} LIMIT 1000;'.format('2'))
         rows = cursor.fetchall()
         # urls = [row[0]+'/dates' for row in data]
         for row in rows:
@@ -90,6 +90,7 @@ class ResidentEventSpider(scrapy.Spider):
         item['venueGeoLat'] = None
         item['venueGeoLong'] = None
         item['venueSourceRef'] = '-1'
+        item['venueName'] = 'TBA/No Link'
 
         item['eventSourceURL'] = response.url
         try:

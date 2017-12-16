@@ -434,7 +434,7 @@ class EventSQLPipeLine(object):
         self.sourceID = crawlerSetting.get('SOURCE_ID')
         self.logger = logging.getLogger("EventSQLPipeline")
         # extended data type mapping
-        self.extendedTypeEvent = {'facebook': 'eventFacebook', 'promotional':'eventPromotional', 'twitter':'eventTwitter'}
+        self.extendedTypeEvent = { 'promotional':'eventPromotional', 'twitter':'eventTwitter'}
         self.extendedDataSourceTypeDict = {}
 
     @classmethod
@@ -462,6 +462,7 @@ class EventSQLPipeLine(object):
         else:
             self.update_venue(item)
 
+        isVenue = self.isVenue(item)
         if not isEvent:
             self.insert_event(item)
         else:
@@ -584,7 +585,7 @@ class EventSQLPipeLine(object):
                                     sourceID, sourceEventRef,
                                     sourceVenueRef, scrapeVenueID, eventName, 
                                     startDateText, startTimeText, endDateText, endTimeText, startDate, endDate,
-                                    description, lineup, eventAdmin, eventPromoters, eventVenueAddress, followers, 
+                                    description, lineup, facebook, eventAdmin, eventPromoters, eventVenueAddress, followers, 
                                     ticketinfo, price, ticketTier,
                                     sourceURL, sourceText, 
                                     created
@@ -593,7 +594,7 @@ class EventSQLPipeLine(object):
                                         %s, %s, 
                                         %s, %s, %s,
                                         %s, %s, %s, %s, %s, %s,
-                                        %s, %s, %s, %s, %s, %s, 
+                                        %s, %s, %s, %s, %s, %s, %s,
                                         %s, %s, %s,
                                         %s, %s,
                                         %s         
@@ -611,13 +612,14 @@ class EventSQLPipeLine(object):
                                  item['endDate'],
                                  item['eventDescription'].encode('utf-8'),
                                  item['eventLineup'].encode('utf-8'),
+                                 item['eventFacebook'].encode('utf-8'),
                                  item['eventAdmin'].encode('utf-8'),
                                  item['eventPromoters'].encode('utf-8'),
                                  item['eventVenueAddress'].encode('utf-8'),
                                  item['eventFollowers'],
                                  # item['eventPromotional'].encode('utf-8'),
                                  # item['eventTwitter'].encode('utf-8'),
-                                 # item['eventFacebook'].encode('utf-8'),
+
                                  item['eventTicketInfo'].encode('utf-8'),
                                  item['eventTicketPrice'].encode('utf-8'),
                                  item['eventTicketTier'].encode('utf-8'),
@@ -630,9 +632,12 @@ class EventSQLPipeLine(object):
             item['scrapeEventID'] = self.cursor.lastrowid
 
         except(MySQLdb.Error) as e:
+            self.logger.error("Query: " + str(item['eventDescription']))
             self.logger.error("Method: (insert_event) Error %d: %s" % (e.args[0], e.args[1]))
 
     def insert_venue(self,item):
+        if (len(item['venueName']) == 0) and (len(item['venueAddress']) == 0):
+            return
         now = datetime.datetime.now()
         try:
             self.cursor.execute("""INSERT INTO scrape_Venues (
@@ -781,7 +786,7 @@ class EventSQLPipeLine(object):
                                 sourceVenueRef=%s, scrapeVenueID=%s, eventName=%s, 
                                 startDateText=%s, startTimeText=%s, 
                                 endDateText=%s, endTimeText=%s, startDate=%s, 
-                                endDate=%s, description=%s, lineup=%s, eventAdmin=%s, 
+                                endDate=%s, description=%s, lineup=%s, facebook=%s, eventAdmin=%s, 
                                 eventPromoters=%s, eventVenueAddress=%s, followers=%s, 
                                 ticketinfo=%s, price=%s, ticketTier=%s,
                                 sourceURL=%s, sourceText=%s,refreshed=%s 
@@ -799,13 +804,13 @@ class EventSQLPipeLine(object):
                                  item['endDate'],
                                  item['eventDescription'].encode('utf-8'),
                                  item['eventLineup'].encode('utf-8'),
+                                 item['eventFacebook'].encode('utf-8'),
                                  item['eventAdmin'].encode('utf-8'),
                                  item['eventPromoters'].encode('utf-8'),
                                  item['eventVenueAddress'].encode('utf-8'),
                                  item['eventFollowers'],
                                  # item['eventPromotional'].encode('utf-8'),
                                  # item['eventTwitter'].encode('utf-8'),
-                                 # item['eventFacebook'].encode('utf-8'),
                                  item['eventTicketInfo'].encode('utf-8'),
                                  item['eventTicketPrice'].encode('utf-8'),
                                  item['eventTicketTier'].encode('utf-8'),
@@ -822,8 +827,8 @@ class EventSQLPipeLine(object):
             # print("Error %d: %s" % (e.args[0], e.args[1]))
 
     def update_venue(self, item):
-        if len(item['venueSourceRef']) == 0:
-            return True
+        if (len(item['venueName']) == 0) and (len(item['venueAddress']) == 0):
+            return
         now = datetime.datetime.now()
         try:
             self.cursor.execute("""UPDATE scrape_Venues 

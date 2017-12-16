@@ -28,7 +28,7 @@ class BandsInTownSpider(scrapy.Spider):
         password = os.environ.get('SECRET_KEY')
         db = MySQLdb.connect(host=self.custom_settings['HOST'], port=3306, user=self.custom_settings['SQLUSERNAME'], passwd=password, db=self.custom_settings['DATABASE'])
         cursor = db.cursor()
-        cursor.execute("SELECT * FROM WDJP.dj_artist_website WHERE sourceID=1 LIMIT 10;")
+        cursor.execute("SELECT * FROM WDJP.dj_artist_website WHERE sourceID=1 LIMIT 1000;")
         data = cursor.fetchall()
         urls = [row[3].strip() for row in data]
         for url in urls:
@@ -78,16 +78,41 @@ class BandsInTownSpider(scrapy.Spider):
 
         yield item
 
+        mode = self.custom_settings['BIT_MODE']
+        if 'upcoming' in mode:
+            try:
+                eventlinks = response.css('div.events-table').xpath('.//tr/@data-event-link').extract()
+                for url in eventlinks:
+                    request = scrapy.Request(url=url, callback=self.parse_event, dont_filter=True)
+                    request.meta['artistSourceRef'] = item['sourceRef']
+                    yield request
+            except Exception as e:
+                self.logger.error("Method: (parse) Error during extracting event links %s" % (e.args[0]))
+        else:
+            if 'history' in mode:
+                url = response.css('div.tabs').xpath('.//a/@href').extract()[0]
+                request = scrapy.Request(url=self.domain+url, callback=self.get_past_events, dont_filter=True)
+                request.meta['artistSourceRef'] = item['sourceRef']
+                yield request
+
+
+    def get_past_events(self,response):
         try:
             eventlinks = response.css('div.events-table').xpath('.//tr/@data-event-link').extract()
             for url in eventlinks:
                 request = scrapy.Request(url=url, callback=self.parse_event, dont_filter=True)
-                request.meta['artistSourceRef'] = item['sourceRef']
+                request.meta['artistSourceRef'] = response.meta['artistSourceRef']
                 yield request
         except Exception as e:
             self.logger.error("Method: (parse) Error during extracting event links %s" % (e.args[0]))
 
-
+        try:
+            nexturl = response.css('a.next_page').xpath('.//@href').extract()[0]
+            request = scrapy.Request(url=self.domain+nexturl, callback=self.get_past_events, dont_filter=True)
+            request.meta['artistSourceRef'] = response.meta['artistSourceRef']
+            yield request
+        except:
+            pass
 
     def parse_event(self,response):
         item = ResidentItem()
