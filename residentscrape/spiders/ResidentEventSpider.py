@@ -251,7 +251,9 @@ class ResidentEventSpider(scrapy.Spider):
 
 
         try:
-            item['venueCity'] = response.css('li.but.circle-left.bbox')[0].xpath('.//a//text()').extract()[0]
+            venueURL = response.css('li.but.circle-left.bbox')[0].xpath('.//a/@href').extract()[0]
+            if len(venueURL.split('/')) == 4:
+                item['venueCity'] = response.css('li.but.circle-left.bbox')[0].xpath('.//a//text()').extract()[0]
         except:
             pass
 

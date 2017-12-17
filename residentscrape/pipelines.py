@@ -434,7 +434,7 @@ class EventSQLPipeLine(object):
         self.sourceID = crawlerSetting.get('SOURCE_ID')
         self.logger = logging.getLogger("EventSQLPipeline")
         # extended data type mapping
-        self.extendedTypeEvent = { 'promotional':'eventPromotional', 'twitter':'eventTwitter'}
+        self.extendedTypeEvent = { 'promotional':'eventPromotional', 'twitter':'eventTwitter','venue_aka':'venueAka'}
         self.extendedDataSourceTypeDict = {}
 
     @classmethod
@@ -632,7 +632,7 @@ class EventSQLPipeLine(object):
             item['scrapeEventID'] = self.cursor.lastrowid
 
         except(MySQLdb.Error) as e:
-            self.logger.error("Query: " + str(item['eventDescription']))
+            self.logger.error("Error occured while scraping: " + str(item['eventSourceURL']))
             self.logger.error("Method: (insert_event) Error %d: %s" % (e.args[0], e.args[1]))
 
     def insert_venue(self,item):
@@ -644,7 +644,7 @@ class EventSQLPipeLine(object):
                                     sourceID, sourceVenueRef, 
                                     venueName, venueAddress, venueCity, venueCountry,
                                     venueGeoLat, venueGeoLong,
-                                    venueAka, venuePhone, venueDescription, capacity,
+                                    venuePhone, venueDescription, capacity,
                                     website, googleMaps, email, followers, 
                                     facebook, twitter, instagram, sourceURL, sourceText,
                                     created
@@ -653,7 +653,7 @@ class EventSQLPipeLine(object):
                                         %s, %s, 
                                         %s, %s, %s, %s,
                                         %s, %s,
-                                        %s, %s, %s, %s,
+                                        %s, %s, %s,
                                         %s, %s, %s, %s,
                                         %s, %s, %s, %s, %s,
                                         %s         
@@ -666,7 +666,7 @@ class EventSQLPipeLine(object):
                                  item['venueCountry'].encode('utf-8'),
                                  item['venueGeoLat'],
                                  item['venueGeoLong'],
-                                 item['venueAka'].encode('utf-8'),
+                                 # item['venueAka'].encode('utf-8'),
                                  item['venuePhone'].encode('utf-8'),
                                  item['venueDescription'].encode('utf-8'),
                                  item['venueCapacity'],
@@ -686,6 +686,7 @@ class EventSQLPipeLine(object):
             item['scrapeVenueID'] = self.cursor.lastrowid
 
         except(MySQLdb.Error) as e:
+            self.logger.error("Error occured while scraping: " + str(item['venueSourceURL']))
             self.logger.error("Method: (insert_venue) Error %d: %s" % (e.args[0], e.args[1]))
 
     def insert_promoter(self,item):
@@ -835,7 +836,7 @@ class EventSQLPipeLine(object):
                                    SET sourceID=%s, sourceVenueRef=%s, 
                                    venueName=%s, venueAddress=%s, venueCity=%s, venueCountry=%s,
                                    venueGeoLat=%s, venueGeoLong=%s,
-                                   venueAka=%s, venuePhone=%s, venueDescription=%s, capacity=%s,
+                                   venuePhone=%s, venueDescription=%s, capacity=%s,
                                    website=%s, googleMaps=%s, email=%s, followers=%s, 
                                    facebook=%s, twitter=%s, instagram=%s, sourceURL=%s, 
                                    sourceText=%s, refreshed=%s
@@ -848,7 +849,7 @@ class EventSQLPipeLine(object):
                                  item['venueCountry'].encode('utf-8'),
                                  item['venueGeoLat'],
                                  item['venueGeoLong'],
-                                 item['venueAka'].encode('utf-8'),
+                                 # item['venueAka'].encode('utf-8'),
                                  item['venuePhone'].encode('utf-8'),
                                  item['venueDescription'].encode('utf-8'),
                                  item['venueCapacity'],
