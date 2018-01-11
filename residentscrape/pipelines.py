@@ -159,7 +159,7 @@ class ArtistSQLPipeLine(object):
         return cls(settings)
 
     def open_spider(self, spider):
-        self.conn = MySQLdb.connect(user=self.sqlusername, passwd=self.sqlpassword, db=self.db, host=self.host, charset="utf8",
+        self.conn = MySQLdb.connect(user=self.sqlusername, passwd=self.sqlpassword, db=self.db, host=self.host, charset="utf8mb4",
                                     use_unicode=True)
         self.cursor = self.conn.cursor()
 
@@ -181,8 +181,9 @@ class ArtistSQLPipeLine(object):
 
     def isArtist(self,item):
         try:
-            sql = "SELECT artistID FROM scrape_Artists WHERE sourceArtistRef='{}' and sourceID={};".format(str(item['sourceRef']),self.sourceID)
-            results = self.cursor.execute(sql)
+            query = "SELECT artistID FROM scrape_Artists WHERE sourceArtistRef=%s and sourceID=%s"
+            args = (str(item['sourceRef']),self.sourceID)
+            results = self.cursor.execute(query,args)
             if results > 0:
                 data = self.cursor.fetchone()
                 item['artistID'] = data[0]
@@ -194,7 +195,7 @@ class ArtistSQLPipeLine(object):
     def insert_artist(self,item):
         now = datetime.datetime.now()
         try:
-            self.cursor.execute("""INSERT INTO scrape_Artists (
+            query = """INSERT INTO scrape_Artists (
                                         sourceID, sourceArtistRef,
                                         name, realName, 
                                         aliases, country, biography, followers,
@@ -209,8 +210,8 @@ class ArtistSQLPipeLine(object):
                                             %s, %s, %s, %s,
                                             %s, %s, 
                                             %s                               
-                                         )""",
-                                (self.sourceID,
+                                         )"""
+            args  = (self.sourceID,
                                  item['sourceRef'],
                                  item['name'].encode('utf-8'),
                                  item['realName'].encode('utf-8'),
@@ -225,7 +226,8 @@ class ArtistSQLPipeLine(object):
                                  item['sourceURL'].encode('utf-8'),
                                  item['sourceText'].encode('utf-8'),
                                  now
-                                 ))
+                                 )
+            self.cursor.execute(query,args)
 
             self.conn.commit()
             item['artistID'] = self.cursor.lastrowid
@@ -235,7 +237,6 @@ class ArtistSQLPipeLine(object):
 
 
     def update_artist(self,item):
-
         now = datetime.datetime.now()
         try:
             self.cursor.execute("""UPDATE scrape_Artists 
@@ -276,6 +277,7 @@ class ArtistSQLPipeLine(object):
                                  ))
 
             self.conn.commit()
+            # self.logger.info(str(self.cursor._last_executed))
 
 
         except(MySQLdb.Error) as e:
@@ -443,7 +445,7 @@ class EventSQLPipeLine(object):
         return cls(settings)
 
     def open_spider(self, spider):
-        self.conn = MySQLdb.connect(user=self.sqlusername, passwd=self.sqlpassword, db=self.db, host=self.host, charset="utf8",
+        self.conn = MySQLdb.connect(user=self.sqlusername, passwd=self.sqlpassword, db=self.db, host=self.host, charset="utf8mb4",
                                     use_unicode=True)
         self.cursor = self.conn.cursor()
 
@@ -456,7 +458,6 @@ class EventSQLPipeLine(object):
             return item
         isEvent = self.isEvent(item)
         isVenue = self.isVenue(item)
-
         if not isVenue:
             self.insert_venue(item)
         else:
@@ -542,8 +543,9 @@ class EventSQLPipeLine(object):
 
     def check_artist_event_map(self,item,spider):
         try:
-            sql = "SELECT artistID FROM scrape_Artists WHERE sourceArtistRef='" +str(item['artistSourceRef']) + "';"
-            results = self.cursor.execute(sql)
+            query = 'SELECT artistID FROM scrape_Artists WHERE sourceArtistRef=%s and sourceID=%s'
+            args = (str(item['artistSourceRef']),self.sourceID)
+            results = self.cursor.execute(query,args)
             data = self.cursor.fetchone()
             item['scrapeArtistID'] = data[0]
             try:
@@ -560,6 +562,7 @@ class EventSQLPipeLine(object):
                 return True
         except Exception as e:
             spider.log(str(e))
+            spider.log(str(self.cursor._last_executed))
             pass
         return False
 
@@ -585,8 +588,9 @@ class EventSQLPipeLine(object):
                                     sourceID, sourceEventRef,
                                     sourceVenueRef, scrapeVenueID, eventName, 
                                     startDateText, startTimeText, endDateText, endTimeText, startDate, endDate,
-                                    description, lineup, facebook, eventAdmin, eventPromoters, eventVenueAddress, followers, 
-                                    ticketinfo, price, ticketTier,
+                                    description, lineup, facebook, eventAdmin, eventPromoters, eventVenueAddress, 
+                                    followers, going,
+                                    ticketinfo, price, ticketTier,ticketURL,
                                     sourceURL, sourceText, 
                                     created
                                         )  
@@ -594,8 +598,9 @@ class EventSQLPipeLine(object):
                                         %s, %s, 
                                         %s, %s, %s,
                                         %s, %s, %s, %s, %s, %s,
-                                        %s, %s, %s, %s, %s, %s, %s,
-                                        %s, %s, %s,
+                                        %s, %s, %s, %s, %s, %s, 
+                                        %s, %s,
+                                        %s, %s, %s, %s,
                                         %s, %s,
                                         %s         
                                      )""",
@@ -617,12 +622,14 @@ class EventSQLPipeLine(object):
                                  item['eventPromoters'].encode('utf-8'),
                                  item['eventVenueAddress'].encode('utf-8'),
                                  item['eventFollowers'],
+                                 item['eventGoing'],
                                  # item['eventPromotional'].encode('utf-8'),
                                  # item['eventTwitter'].encode('utf-8'),
 
                                  item['eventTicketInfo'].encode('utf-8'),
                                  item['eventTicketPrice'].encode('utf-8'),
                                  item['eventTicketTier'].encode('utf-8'),
+                                 item['eventTicketURL'].encode('utf-8'),
                                  item['eventSourceURL'].encode('utf-8'),
                                  item['eventSourceText'].encode('utf-8'),
                                  now
@@ -636,13 +643,18 @@ class EventSQLPipeLine(object):
             self.logger.error("Method: (insert_event) Error %d: %s" % (e.args[0], e.args[1]))
 
     def insert_venue(self,item):
+
+        if item['venueSourceRef'] == '-1' and item['venueTBAInsert'] == False:
+            item['scrapeVenueID'] = -1
+            return
+
         if (len(item['venueName']) == 0) and (len(item['venueAddress']) == 0):
             return
         now = datetime.datetime.now()
         try:
             self.cursor.execute("""INSERT INTO scrape_Venues (
-                                    sourceID, sourceVenueRef, 
-                                    venueName, venueAddress, venueCity, venueCountry,
+                                    sourceID, sourceVenueRef,venueName, 
+                                    venueStreet, venueCity, venueState, venueRegion, venueZip, venueCountry, venueFullAddress,
                                     venueGeoLat, venueGeoLong,
                                     venuePhone, venueDescription, capacity,
                                     website, googleMaps, email, followers, 
@@ -650,8 +662,8 @@ class EventSQLPipeLine(object):
                                     created
                                     )  
                                     VALUES (
-                                        %s, %s, 
-                                        %s, %s, %s, %s,
+                                        %s, %s, %s,
+                                        %s, %s, %s, %s, %s, %s, %s,
                                         %s, %s,
                                         %s, %s, %s,
                                         %s, %s, %s, %s,
@@ -661,9 +673,13 @@ class EventSQLPipeLine(object):
                                 (self.sourceID,
                                  item['venueSourceRef'].encode('utf-8'),
                                  item['venueName'].encode('utf-8'),
-                                 item['venueAddress'].encode('utf-8'),
+                                 item['venueStreet'].encode('utf-8'),
                                  item['venueCity'].encode('utf-8'),
+                                 item['venueState'].encode('utf-8'),
+                                 item['venueRegion'].encode('utf-8'),
+                                 item['venueZip'].encode('utf-8'),
                                  item['venueCountry'].encode('utf-8'),
+                                 item['venueAddress'].encode('utf-8'),
                                  item['venueGeoLat'],
                                  item['venueGeoLong'],
                                  # item['venueAka'].encode('utf-8'),
@@ -686,6 +702,7 @@ class EventSQLPipeLine(object):
             item['scrapeVenueID'] = self.cursor.lastrowid
 
         except(MySQLdb.Error) as e:
+            # self.logger.error(str(self.cursor._last_executed))
             self.logger.error("Error occured while scraping: " + str(item['venueSourceURL']))
             self.logger.error("Method: (insert_venue) Error %d: %s" % (e.args[0], e.args[1]))
 
@@ -753,6 +770,7 @@ class EventSQLPipeLine(object):
 
             self.conn.commit()
         except(MySQLdb.Error) as e:
+            self.logger.error(str(self.cursor._last_executed))
             self.logger.error("Method: (insert_artist_event_map) Error %d: %s" % (e.args[0], e.args[1]))
 
     def insert_event_promoter_map(self, item):
@@ -833,8 +851,8 @@ class EventSQLPipeLine(object):
         now = datetime.datetime.now()
         try:
             self.cursor.execute("""UPDATE scrape_Venues 
-                                   SET sourceID=%s, sourceVenueRef=%s, 
-                                   venueName=%s, venueAddress=%s, venueCity=%s, venueCountry=%s,
+                                   SET sourceID=%s, sourceVenueRef=%s, venueName=%s, 
+                                   venueStreet=%s, venueCity=%s, venueState=%s, venueRegion=%s, venueZip=%s, venueCountry=%s, venueFullAddress=%s, 
                                    venueGeoLat=%s, venueGeoLong=%s,
                                    venuePhone=%s, venueDescription=%s, capacity=%s,
                                    website=%s, googleMaps=%s, email=%s, followers=%s, 
@@ -844,9 +862,13 @@ class EventSQLPipeLine(object):
                                 (self.sourceID,
                                  item['venueSourceRef'].encode('utf-8'),
                                  item['venueName'].encode('utf-8'),
-                                 item['venueAddress'].encode('utf-8'),
+                                 item['venueStreet'].encode('utf-8'),
                                  item['venueCity'].encode('utf-8'),
+                                 item['venueState'].encode('utf-8'),
+                                 item['venueRegion'].encode('utf-8'),
+                                 item['venueZip'].encode('utf-8'),
                                  item['venueCountry'].encode('utf-8'),
+                                 item['venueAddress'].encode('utf-8'),
                                  item['venueGeoLat'],
                                  item['venueGeoLong'],
                                  # item['venueAka'].encode('utf-8'),

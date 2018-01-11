@@ -11,6 +11,7 @@ from scrapy.utils.project import get_project_settings
 import logging
 import sys
 import datetime
+import usaddress
 
 class ResidentSpider(scrapy.Spider):
 
@@ -31,15 +32,16 @@ class ResidentSpider(scrapy.Spider):
         db = MySQLdb.connect(host=self.custom_settings['HOST'], port=3306, user=self.custom_settings['SQLUSERNAME'],
                              passwd=password, db=self.custom_settings['DATABASE'])
         cursor = db.cursor()
+
         ## Get Artist URL from old database
-        # cursor.execute("SELECT * FROM WDJP.dj_artist_website WHERE sourceID=2 LIMIT 1 ;")
-        # data = cursor.fetchall()
-        # urls = [row[3].strip() for row in data]
+        cursor.execute("SELECT * FROM WDJP.dj_artist_website WHERE sourceID=2 LIMIT 1000 ;")
+        data = cursor.fetchall()
+        urls = [row[3].strip() for row in data]
 
         ## Get Artist URL from scrapeArtist table
-        cursor.execute("SELECT * FROM WDJPNew.scrape_Artists where sourceID =2 order by refreshed LIMIT 1000;")
-        data = cursor.fetchall()
-        urls = [row[18].strip() for row in data]
+        # cursor.execute("SELECT * FROM WDJPNew.scrape_Artists where sourceID =2 order by refreshed LIMIT 1;")
+        # data = cursor.fetchall()
+        # urls = [row[18].strip() for row in data]
 
         ## Loop through every artist URL
         for url in urls:
@@ -51,8 +53,10 @@ class ResidentSpider(scrapy.Spider):
                 if len(url) > 6:
                     request = scrapy.Request(url='https://' + url, callback=self.parse)
                     yield request
+
+
         ##For testing with single start url
-        # url = 'https://www.residentadvisor.net/dj/rogersanchez'
+        # url = 'https://www.residentadvisor.net/dj/markknight'
         # request = scrapy.Request(url=url, callback=self.parse)
         # yield request
 
@@ -153,6 +157,7 @@ class ResidentSpider(scrapy.Spider):
     def parse_events(self,response):
 
         mode = self.custom_settings['RA_MODE']
+        year = int(self.custom_settings['RA_YEAR'])
         urls = []
         if 'upcoming' in mode:
             temp = response.css('ul.mobile-pr24-tablet-desktop-pr8')[0].xpath('.//li/h1/text()')
@@ -168,6 +173,10 @@ class ResidentSpider(scrapy.Spider):
             if 'history' in mode:
                 temp = response.css('div.fl')[0].xpath('.//li/a/@href').extract()
                 urls = [self.domain + x for x in temp]
+                try:
+                    urls = urls[:(2017-year)]
+                except:
+                    pass
                 for url in urls:
                     request = scrapy.Request(url=url, callback=self.extract_hist_events, dont_filter=True)
                     request.meta['artistSourceRef'] = response.meta['artistSourceRef']
@@ -191,13 +200,14 @@ class ResidentSpider(scrapy.Spider):
         item['artistSourceRef'] = response.meta['artistSourceRef']
         item['venueCapacity'] = 0
         item['eventFollowers'] = 0
+        item['eventGoing'] = 0
         item['venueFollowers'] = 0
         item['promoterFollowers'] = 0
-        item['scrapeVenueID'] = -1
         item['venueGeoLat'] = None
         item['venueGeoLong'] = None
         item['venueSourceRef'] = '-1'
         item['venueName'] = 'TBA/No Link'
+        item['venueTBAInsert'] = True
 
         item['eventSourceURL'] = response.url
         try:
@@ -475,11 +485,53 @@ class ResidentSpider(scrapy.Spider):
             pass
 
 
-        # Venue City
+        # Venue City or Region
         try:
-            item['venueCity'] = response.css('li.but.circle-left.bbox')[0].xpath('.//a//text()').extract()[0]
+            temp = response.css('li.but.circle-left.bbox')[0].xpath('.//a//text()').extract()[0].strip()
+            if 'north' in temp.lower() or 'east' in temp.lower() or 'south' in temp.lower() or 'west' in temp.lower() :
+                item['venueRegion'] = temp
+                item['venueCity'] = ''
+            else:
+                item['venueCity'] = temp
         except:
             pass
+
+
+
+        ## Split Address
+        try:
+            if len(item['venueAddress']) > 1 and 'united state' in item['venueCountry'].lower():
+                data = usaddress.tag(item['venueAddress'],tag_mapping={
+                       'Recipient': 'recipient',
+                       'AddressNumber': 'address1',
+                       'AddressNumberPrefix': 'address1',
+                       'AddressNumberSuffix': 'address1',
+                       'StreetName': 'address1',
+                       'StreetNamePreDirectional': 'address1',
+                       'StreetNamePreModifier': 'address1',
+                       'StreetNamePreType': 'address1',
+                       'StreetNamePostDirectional': 'address1',
+                       'StreetNamePostModifier': 'address1',
+                       'StreetNamePostType': 'address1',
+                       'CornerOf': 'address1',
+                       'IntersectionSeparator': 'address1',
+                       'LandmarkName': 'address1',
+                       'USPSBoxGroupID': 'address1',
+                       'USPSBoxGroupType': 'address1',
+                       'USPSBoxID': 'address1',
+                       'USPSBoxType': 'address1',
+                       'BuildingName': 'address2',
+                       'OccupancyType': 'address2',
+                       'OccupancyIdentifier': 'address2',
+                       'SubaddressIdentifier': 'address2',
+                       'SubaddressType': 'address2',
+                    })[0]
+                item['venueState'] = data['StateName']
+                item['venueZip'] = data['ZipCode']
+                item['venueStreet'] = data['address1']
+        except:
+            pass
+
 
         if len(item['eventPromotersURL']) > 0:
             for url in item['eventPromotersURL']:

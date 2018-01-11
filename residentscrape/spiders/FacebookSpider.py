@@ -23,7 +23,7 @@ class FacebookSpider(scrapy.Spider):
     logger = logging.getLogger("FacebookSpider")
 
     custom_settings = {
-        'SOURCE_ID': '3',
+        'SOURCE_ID': '4',
     }
 
     def start_requests(self):
@@ -45,13 +45,26 @@ class FacebookSpider(scrapy.Spider):
         self.logger.info('Access_Token: '+str(self.access_token))
 
 
-        ## Fetch Facebook Links from Artists Table
+
+
+
         password = os.environ.get('SECRET_KEY')
         db = MySQLdb.connect(host=self.custom_settings['HOST'], port=3306, user=self.custom_settings['SQLUSERNAME'],
                              passwd=password, db=self.custom_settings['DATABASE'])
         cursor = db.cursor()
-        cursor.execute(
-            'SELECT sourceArtistRef, facebook FROM WDJPNew.scrape_Artists WHERE length(facebook) > 0 LIMIT 200;')
+
+        ## Get Artist URL from old database
+        # query = "SELECT sourceID, url FROM WDJP.dj_artist_website WHERE sourceID=4 LIMIT 1;"
+
+
+        ## Fetch Facebook Links from New DB Artists Table
+        # query = 'SELECT sourceArtistRef, facebook FROM WDJPNew.scrape_Artists WHERE length(facebook) > 0 and sourceID=2 LIMIT 150;'
+
+
+        ## Fetch Facebook Links from Scrape Promoter
+        query = 'SELECT sourceArtistRef, facebook FROM WDJPNew.scrape_Artists WHERE length(facebook) > 0 and sourceID=2 LIMIT 150;'
+
+        cursor.execute(query)
         rows = cursor.fetchall()
         # urls = [row[0]+'/dates' for row in data]
         for row in rows:
@@ -71,12 +84,12 @@ class FacebookSpider(scrapy.Spider):
 
 
         ## Test with one URL
-        # fbUrl = 'https://www.facebook.com/judgejules'
+        # fbUrl = 'https://www.facebook.com/fabriclondon'
         # if 'http' in fbUrl:
         #     try:
         #         pageID = fbUrl.split('/')[-1]
         #         url = self.domain + "/v2.11/" + pageID + "?fields=" + ','.join(
-        #             artistFields) + "&access_token=" + self.access_token
+        #             self.artistFields) + "&access_token=" + self.access_token
         #         request = scrapy.Request(url=url, callback=self.parse_artist)
         #         request.meta['artistSourceRef'] = pageID
         #         request.meta['facebook'] = fbUrl
@@ -196,7 +209,7 @@ class FacebookSpider(scrapy.Spider):
                 try:
                     location = place['location']
                     try:
-                        item['venueAddress'] = location['street']
+                        item['venueStreet'] = location['street']
                     except:
                         pass
                     try:
@@ -205,6 +218,14 @@ class FacebookSpider(scrapy.Spider):
                         pass
                     try:
                         item['venueCountry'] = location['country']
+                    except:
+                        pass
+                    try:
+                        item['venueState'] = location['state']
+                    except:
+                        pass
+                    try:
+                        item['venueZip'] = location['zip']
                     except:
                         pass
                     try:

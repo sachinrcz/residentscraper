@@ -122,11 +122,13 @@ class ResidentItem(scrapy.Item):
     eventDescription = scrapy.Field()
     eventLineup = scrapy.Field()
     eventFollowers = scrapy.Field()
+    eventGoing = scrapy.Field()
     eventMinAge = scrapy.Field()
     eventAdmin = scrapy.Field()
     eventTicketInfo = scrapy.Field()
     eventTicketPrice = scrapy.Field()
     eventTicketTier = scrapy.Field()
+    eventTicketURL = scrapy.Field()
     eventFacebook = scrapy.Field()
     eventTwitter = scrapy.Field()
     eventPromotional = scrapy.Field()
@@ -141,7 +143,11 @@ class ResidentItem(scrapy.Item):
     venueSourceRef = scrapy.Field()
     venueName = scrapy.Field()
     venueAddress = scrapy.Field()
+    venueStreet = scrapy.Field()
     venueCity = scrapy.Field()
+    venueRegion = scrapy.Field()
+    venueState = scrapy.Field()
+    venueZip = scrapy.Field()
     venueCountry = scrapy.Field()
     venueGeoLat = scrapy.Field()
     venueGeoLong = scrapy.Field()
@@ -159,6 +165,7 @@ class ResidentItem(scrapy.Item):
     venueSourceURL = scrapy.Field()
     venueSourceText = scrapy.Field()
     venueLocationURL = scrapy.Field()                     # Found in bandsintown
+    venueTBAInsert = scrapy.Field()
 
 
     ## Fields from Club/Promoter page

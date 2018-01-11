@@ -17,7 +17,7 @@ class BandsInTownSpider(scrapy.Spider):
 
     domain = "https://www.bandsintown.com"
 
-    logger = logging.getLogger("BITArtistSpider")
+    logger = logging.getLogger("BandsInTownSpider")
 
     custom_settings = {
         'SOURCE_ID': '1',
@@ -30,14 +30,14 @@ class BandsInTownSpider(scrapy.Spider):
         cursor = db.cursor()
 
         ## Get Artist URL from old database
-        # cursor.execute("SELECT * FROM WDJP.dj_artist_website WHERE sourceID=1 LIMIT 1000;")
-        # data = cursor.fetchall()
-        # urls = [row[3].strip() for row in data]
+        cursor.execute("SELECT * FROM WDJP.dj_artist_website WHERE sourceID=1 LIMIT 1000;")
+        data = cursor.fetchall()
+        urls = [row[3].strip() for row in data]
 
         ## Get Artist URL from scrapeArtist table
-        cursor.execute("SELECT * FROM WDJPNew.scrape_Artists where sourceID =1 order by refreshed LIMIT 1000;")
-        data = cursor.fetchall()
-        urls = [row[18].strip() for row in data]
+        # cursor.execute("SELECT * FROM WDJPNew.scrape_Artists where sourceID =1 order by refreshed LIMIT 1;")
+        # data = cursor.fetchall()
+        # urls = [row[18].strip() for row in data]
 
 
         for url in urls:
@@ -94,6 +94,7 @@ class BandsInTownSpider(scrapy.Spider):
                 for url in eventlinks:
                     request = scrapy.Request(url=url, callback=self.parse_event, dont_filter=True)
                     request.meta['artistSourceRef'] = item['sourceRef']
+                    request.meta['artistName'] = item['name']
                     yield request
             except Exception as e:
                 self.logger.error("Method: (parse) Error during extracting event links %s" % (e.args[0]))
@@ -102,6 +103,7 @@ class BandsInTownSpider(scrapy.Spider):
                 url = response.css('div.tabs').xpath('.//a/@href').extract()[0]
                 request = scrapy.Request(url=self.domain+url, callback=self.get_past_events, dont_filter=True)
                 request.meta['artistSourceRef'] = item['sourceRef']
+                request.meta['artistName'] = item['name']
                 yield request
 
 
@@ -111,6 +113,7 @@ class BandsInTownSpider(scrapy.Spider):
             for url in eventlinks:
                 request = scrapy.Request(url=url, callback=self.parse_event, dont_filter=True)
                 request.meta['artistSourceRef'] = response.meta['artistSourceRef']
+                request.meta['artistName'] = response.meta['artistName']
                 yield request
         except Exception as e:
             self.logger.error("Method: (parse) Error during extracting event links %s" % (e.args[0]))
@@ -119,6 +122,7 @@ class BandsInTownSpider(scrapy.Spider):
             nexturl = response.css('a.next_page').xpath('.//@href').extract()[0]
             request = scrapy.Request(url=self.domain+nexturl, callback=self.get_past_events, dont_filter=True)
             request.meta['artistSourceRef'] = response.meta['artistSourceRef']
+            request.meta['artistName'] = response.meta['artistName']
             yield request
         except:
             pass
@@ -129,15 +133,24 @@ class BandsInTownSpider(scrapy.Spider):
             item.setdefault(field, '')
         item['venueCapacity'] = 0
         item['eventFollowers'] = 0
+        item['eventGoing'] = 0
         item['venueFollowers'] = 0
         item['promoterFollowers'] = 0
         item['artistSourceRef'] = response.meta['artistSourceRef']
         item['eventSourceURL'] = response.url
         item['eventSourceText'] = response.text
+        item['venueGeoLat'] = None
+        item['venueTBAInsert'] = True
+        item['venueGeoLong'] = None
+
+
+
         try:
             item['eventSourceRef'] = response.url.split('/')[4].split('-')[0]
         except:
             pass
+
+
 
         ## Extract Date Time
         try:
@@ -186,6 +199,12 @@ class BandsInTownSpider(scrapy.Spider):
         except Exception as e:
             pass
 
+        ## Name Event
+        try:
+            item['eventName'] = response.meta['artistName'] + "|" + item['venueName']
+        except:
+            pass
+
         try:
             item['venueSourceURL'] = response.css('h2.venue-name').xpath('.//a/@href').extract()[0].strip()
             item['venueSourceRef'] = item['venueSourceURL'].split('/')[4].split('-')[0]
@@ -195,11 +214,11 @@ class BandsInTownSpider(scrapy.Spider):
 
         ## Address information
         try:
-            item['venueAddress'] = response.xpath('//h3[contains(@itemprop,"streetAddress")]//text()').extract()[0].strip()
+            item['venueStreet'] = response.xpath('//h3[contains(@itemprop,"streetAddress")]//text()').extract()[0].strip()
         except:
             pass
         try:
-            item['venueAddress'] = response.xpath('//h3[contains(@itemprop,"streetAddress")]//text()').extract()[0].strip()
+            item['venueStreet'] = response.xpath('//h3[contains(@itemprop,"streetAddress")]//text()').extract()[0].strip()
         except:
             pass
 

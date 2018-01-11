@@ -40,10 +40,9 @@ ROBOTSTXT_OBEY = False
 
 # Override the default request headers:
 DEFAULT_REQUEST_HEADERS = {
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    'Accept-Language': 'en',
+    # 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
     'user-agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36',
-    'referer':'https://www.residentadvisor.net',
+    # 'referer':'https://www.residentadvisor.net',
 }
 
 # Enable or disable spider middlewares
@@ -98,9 +97,16 @@ DATABASE = 'WDJPNew'
 HOST = 'localhost'
 RA_MODE = 'upcoming'                                 # upcoming or history
 BIT_MODE = 'upcoming'                                # upcoming or history
+RA_YEAR = '2010'                                    # Years past this won't be considered for scrape. Works only with history mode
 
-LOG_STDOUT = True
-LOG_FILE = '/home/sachin/Sachin/upwork/residentscrape/log/scrape_run_BIT_upcoming.log'
+
+#LOG_STDOUT = True
+#LOG_FILE = '/home/sachin/Sachin/upwork/residentscrape/log/scrape_run_RA_history.log'
 FACEBOOK_APP_ID='127062923380'
 FACEBOOK_APP_SECRET='0a2b51bc116940af57c65edc58a4c047'
 FACEBOOK_API_USE_MODE=1                              # mode 1 for single request and mode 2 for two requests
+
+
+
+## source IDs
+SONGKICK_SOURCE_ID=6
