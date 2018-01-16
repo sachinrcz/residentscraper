@@ -22,8 +22,16 @@ class FacebookSpider(scrapy.Spider):
 
     logger = logging.getLogger("FacebookSpider")
 
+    project_settings = get_project_settings()
+
     custom_settings = {
-        'SOURCE_ID': '4',
+        "AUTOTHROTTLE_ENABLED": True,
+        "AUTOTHROTTLE_START_DELAY": 1,
+        "AUTOTHROTTLE_MAX_DELAY": 2,
+        "AUTOTHROTTLE_TARGET_CONCURRENCY": 5,
+        "CONCURRENT_REQUESTS_PER_DOMAIN": 1,
+        "DOWNLOAD_DELAY": 1,
+        "SOURCE_ID": project_settings['FACEBOOK_SOURCE_ID']
     }
 
     def start_requests(self):
@@ -54,7 +62,7 @@ class FacebookSpider(scrapy.Spider):
         cursor = db.cursor()
 
         ## Get Artist URL from old database
-        # query = "SELECT sourceID, url FROM WDJP.dj_artist_website WHERE sourceID=4 LIMIT 1;"
+        query = "SELECT sourceID, url FROM WDJP.dj_artist_website WHERE sourceID=4 LIMIT 1000;"
 
 
         ## Fetch Facebook Links from New DB Artists Table
@@ -62,16 +70,16 @@ class FacebookSpider(scrapy.Spider):
 
 
         ## Fetch Facebook Links from Scrape Promoter
-        query = 'SELECT sourceArtistRef, facebook FROM WDJPNew.scrape_Artists WHERE length(facebook) > 0 and sourceID=2 LIMIT 150;'
+        # query = 'SELECT sourceArtistRef, facebook FROM WDJPNew.scrape_Artists WHERE length(facebook) > 0 and sourceID=2 LIMIT 1000;'
 
         cursor.execute(query)
         rows = cursor.fetchall()
         # urls = [row[0]+'/dates' for row in data]
         for row in rows:
             url = row[1]
-            if 'http' in url:
+            if 'https://www.facebook.com/' in url:
                 try:
-                    pageID = url.split('/')[-1]
+                    pageID = url.strip('https://www.facebook.com/').split('/')[0]
                     url = self.domain + "/v2.11/" + pageID + "?fields=" + ','.join(
                         self.artistFields) + "&access_token=" + self.access_token
                     request = scrapy.Request(url=url, callback=self.parse_artist)
@@ -117,9 +125,13 @@ class FacebookSpider(scrapy.Spider):
         item['biography'] = self.get_key(result,'bio')
         item['website'] = self.get_key(result,'website')
         item['facebook'] = response.meta['facebook']
-        events = result['events']['data']
         yield item
 
+        events = []
+        try:
+            events = result['events']['data']
+        except:
+            pass
         item = None
         for event in events:
             if self.custom_settings['FACEBOOK_API_USE_MODE'] == 1:

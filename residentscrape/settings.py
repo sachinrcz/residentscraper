@@ -110,3 +110,6 @@ FACEBOOK_API_USE_MODE=1                              # mode 1 for single request
 
 ## source IDs
 SONGKICK_SOURCE_ID=6
+INSTAGRAM_SOURCE_ID=9
+FACEBOOK_SOURCE_ID=4
+GIGATOOL_SOURCE_ID=3

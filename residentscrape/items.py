@@ -94,6 +94,13 @@ class ArtistItem(scrapy.Item):
     discog = scrapy.Field()
     bandcamp = scrapy.Field()
     soundcloud = scrapy.Field()
+
+    follows = scrapy.Field()
+    num_posts = scrapy.Field()
+    external_url = scrapy.Field()
+    profile_pic_url = scrapy.Field()
+
+
     sourceURL = scrapy.Field()
     sourceText = scrapy.Field()
     similarArtists = scrapy.Field()
@@ -192,4 +199,3 @@ class ResidentItem(scrapy.Item):
 
     def __repr__(self):
         return repr({"Event Name":self['eventName'],"Venue Name":self['venueName']})
-

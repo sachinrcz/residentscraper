@@ -151,7 +151,8 @@ class ArtistSQLPipeLine(object):
         self.sourceID = crawlerSetting.get('SOURCE_ID')
         self.logger = logging.getLogger("ArtistSQLPipeline")
         # extended data type mapping
-        self.extendedTypeArtist = {'discogs':'discog','soundcloud':'soundcloud','bandcamp':'bandcamp'}
+        self.extendedTypeArtist = {'discogs':'discog','soundcloud':'soundcloud','bandcamp':'bandcamp',
+                                   'follows':'follows','num_posts':'num_posts','external_url':'external_url','profile_pic_url':'profile_pic_url'}
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -200,6 +201,7 @@ class ArtistSQLPipeLine(object):
                                         name, realName, 
                                         aliases, country, biography, followers,
                                         website, facebook, twitter, instagram,
+                                        image_url,
                                         sourceURL, sourceText,  
                                         created
                                             )  
@@ -208,6 +210,7 @@ class ArtistSQLPipeLine(object):
                                             %s, %s, 
                                             %s, %s, %s, %s,
                                             %s, %s, %s, %s,
+                                            %s,
                                             %s, %s, 
                                             %s                               
                                          )"""
@@ -223,6 +226,7 @@ class ArtistSQLPipeLine(object):
                                  item['facebook'].encode('utf-8'),
                                  item['twitter'].encode('utf-8'),
                                  item['instagram'].encode('utf-8'),
+                                 item['profile_pic_url'].encode('utf-8'),
                                  item['sourceURL'].encode('utf-8'),
                                  item['sourceText'].encode('utf-8'),
                                  now
@@ -244,7 +248,7 @@ class ArtistSQLPipeLine(object):
                                    WPArtistID=%s, name=%s, realName=%s, 
                                    aliases=%s, country=%s, biography=%s,
                                    followers=%s, 
-                                   website=%s, facebook=%s, twitter=%s, instagram=%s,
+                                   website=%s, facebook=%s, twitter=%s, instagram=%s,image_url=%s,
                                    sourceURL=%s, sourceText=%s, 
                                    refreshed=%s WHERE artistID=%s """,
                                 (self.sourceID,
@@ -261,6 +265,7 @@ class ArtistSQLPipeLine(object):
                                  item['facebook'].encode('utf-8'),
                                  item['twitter'].encode('utf-8'),
                                  item['instagram'].encode('utf-8'),
+                                 item['profile_pic_url'].encode('utf-8'),
                                  item['sourceURL'].encode('utf-8'),
                                  item['sourceText'].encode('utf-8'),
 
@@ -286,15 +291,22 @@ class ArtistSQLPipeLine(object):
     ### Handle Extended Data for Artist ###
 
     def process_artist_extended_data(self,item):
+
         for key,value in self.extendedTypeArtist.items():
-            if len(item[value]) > 0:
+            extended_eligible = False
+            try:
+                if len(item[value]) > 0:
+                    extended_eligible = True
+            except:
+                if item[value] != 0:
+                    extended_eligible = True
+
+            if extended_eligible:
                 extendedDataTypeID, extendedDataID = self.check_if_extended_exist(item,key)
                 if extendedDataID == 0:
                     self.insert_artist_extended_data(item, key,  extendedDataTypeID)
                 else:
                     self.update_artist_extended_data(item,key, extendedDataTypeID, extendedDataID)
-
-
 
     def check_if_extended_exist(self,item, key):
         extendedDataTypeID = 0
@@ -420,9 +432,6 @@ class ArtistSQLPipeLine(object):
 
         except(MySQLdb.Error) as e:
             self.logger.error("Method: (insert_similar_artist_bit) Error %d: %s" % (e.args[0], e.args[1]))
-
-
-
 
 class EventSQLPipeLine(object):
 
@@ -1009,4 +1018,3 @@ class EventSQLPipeLine(object):
 
         except(MySQLdb.Error) as e:
             self.logger.error("Method: (update_artist_extended_date) Error %d: %s" % (e.args[0], e.args[1]))
-

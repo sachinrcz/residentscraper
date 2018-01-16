@@ -64,6 +64,7 @@ class SongkickSpider(scrapy.Spider):
         item = ArtistItem()
         for field in item.fields:
             item.setdefault(field, '')
+        item['followers'] = 0
 
         try:
             item['sourceRef'] = response.url.split('/')[-1].split('-')[0].strip()
@@ -83,7 +84,7 @@ class SongkickSpider(scrapy.Spider):
             item['followers'] = response.css('li.popularity-highlight').xpath('.//strong//text()').extract()[0][1:-1]
             item['followers'] = int(item['followers'])
         except:
-            item['followers'] = 0
+            pass
 
 
         try:
