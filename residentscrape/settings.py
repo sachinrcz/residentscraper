@@ -92,9 +92,19 @@ ITEM_PIPELINES = {
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
-SQLUSERNAME = 'root'
-DATABASE = 'WDJPNew'
-HOST = 'localhost'
+
+## LocalMYSQL credentials
+# SQLUSERNAME = 'root'
+# DATABASE = 'WDJPNew'
+# HOST = 'localhost'
+
+## AWS RD credentials
+SQLUSERNAME = 'wdjpuser'
+DATABASE = 'wdjpdbcarling'
+HOST = 'wdjpdbcarling.czroneq4sqg9.us-west-2.rds.amazonaws.com'
+
+
+
 RA_MODE = 'upcoming'                                 # upcoming or history
 BIT_MODE = 'upcoming'                                # upcoming or history
 RA_YEAR = '2010'                                    # Years past this won't be considered for scrape. Works only with history mode

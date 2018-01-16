@@ -39,7 +39,7 @@ class InstagramSpider(scrapy.Spider):
         db = MySQLdb.connect(host=self.custom_settings['HOST'], port=3306, user=self.custom_settings['SQLUSERNAME'],
                              passwd=password, db=self.custom_settings['DATABASE'])
         cursor = db.cursor()
-        query = 'SELECT artistID, url FROM WDJP.dj_artist_website where sourceID={} LIMIT 1000'.format(
+        query = 'SELECT artistID, url FROM dj_artist_website where sourceID={} LIMIT 1000'.format(
         self.custom_settings.get('INSTAGRAM_SOURCE_ID'))
         results = cursor.execute(query)
         rows = cursor.fetchall()
