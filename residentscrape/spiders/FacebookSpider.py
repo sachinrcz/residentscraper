@@ -62,7 +62,7 @@ class FacebookSpider(scrapy.Spider):
         cursor = db.cursor()
 
         ## Get Artist URL from old database
-        query = "SELECT sourceID, url FROM WDJP.dj_artist_website WHERE sourceID=4 LIMIT 1000;"
+        query = "SELECT sourceID, url FROM dj_artist_website WHERE sourceID=4 LIMIT 1000;"
 
 
         ## Fetch Facebook Links from New DB Artists Table

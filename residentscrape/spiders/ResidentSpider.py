@@ -34,7 +34,7 @@ class ResidentSpider(scrapy.Spider):
         cursor = db.cursor()
 
         ## Get Artist URL from old database
-        cursor.execute("SELECT * FROM WDJP.dj_artist_website WHERE sourceID=2 LIMIT 1000 ;")
+        cursor.execute("SELECT * FROM dj_artist_website WHERE sourceID=2 LIMIT 1000 ;")
         data = cursor.fetchall()
         urls = [row[3].strip() for row in data]
 
