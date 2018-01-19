@@ -23,7 +23,7 @@ class ResidentSpider(scrapy.Spider):
 
     project_settings = get_project_settings()
     custom_settings = {
-        "SOURCE_ID": project_settings['BIT_SOURCE_ID']
+        "SOURCE_ID": project_settings['RESIDENTADVISOR_SOURCE_ID']
     }
 
 
