@@ -19,8 +19,9 @@ class BandsInTownSpider(scrapy.Spider):
 
     logger = logging.getLogger("BandsInTownSpider")
 
+    project_settings = get_project_settings()
     custom_settings = {
-        'SOURCE_ID': '1',
+        "SOURCE_ID": project_settings['BIT_SOURCE_ID']
     }
 
     def start_requests(self):
@@ -69,7 +70,8 @@ class BandsInTownSpider(scrapy.Spider):
         except:
             pass
         item['sourceURL'] = response.url
-        item['sourceText'] = response.text
+        if self.custom_settings['SAVE_SOURCE'] == 1:
+            item['sourceText'] = response.text
 
         try:
             item['followers'] = response.css('p.count::text').extract()[0].replace('Trackers','').replace(',','').strip()
@@ -138,7 +140,8 @@ class BandsInTownSpider(scrapy.Spider):
         item['promoterFollowers'] = 0
         item['artistSourceRef'] = response.meta['artistSourceRef']
         item['eventSourceURL'] = response.url
-        item['eventSourceText'] = response.text
+        if self.custom_settings['SAVE_SOURCE'] == 1:
+            item['eventSourceText'] = response.text
         item['venueGeoLat'] = None
         item['venueTBAInsert'] = True
         item['venueGeoLong'] = None
@@ -243,7 +246,8 @@ class BandsInTownSpider(scrapy.Spider):
 
     def parse_venue(self,response):
         item = response.meta['item']
-        item['venueSourceText'] = response.text
+        if self.custom_settings['SAVE_SOURCE'] == 1:
+            item['venueSourceText'] = response.text
 
         try:
             item['venuePhone'] = response.css('div.venue-phone::text').extract()[0]

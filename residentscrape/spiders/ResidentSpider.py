@@ -21,8 +21,9 @@ class ResidentSpider(scrapy.Spider):
 
     logger = logging.getLogger("ResidentSpider")
 
+    project_settings = get_project_settings()
     custom_settings = {
-        'SOURCE_ID': '2',
+        "SOURCE_ID": project_settings['BIT_SOURCE_ID']
     }
 
 
@@ -76,7 +77,8 @@ class ResidentSpider(scrapy.Spider):
         except:
             item['name'] = response.css('div.position').xpath('.//h1/text()').extract()[0]
         item['sourceURL'] = response.url
-        item['sourceText'] = response.text
+        if self.custom_settings['SAVE_SOURCE'] == 1:
+            item['sourceText'] = response.text
         details = response.css('aside#detail').xpath('.//li')
         for detail in details:
             list = detail.xpath('.//text()').extract()
@@ -223,7 +225,8 @@ class ResidentSpider(scrapy.Spider):
                 item['eventSourceRef'] = response.url.split('/')[-2].strip()
         except:
             pass
-        item['eventSourceText'] = response.text
+        if self.custom_settings['SAVE_SOURCE'] == 1:
+            item['eventSourceText'] = response.text
         details = response.css('aside#detail').xpath('.//li')
         for detail in details:
             list = detail.xpath('.//text()').extract()
@@ -396,7 +399,8 @@ class ResidentSpider(scrapy.Spider):
         item = response.meta['item']
         details = response.css('aside#detail').xpath('.//li')
         item['venueSourceURL'] = response.url
-        item['venueSourceText'] = response.text
+        if self.custom_settings['SAVE_SOURCE'] == 1:
+            item['venueSourceText'] = response.text
         try:
             item['venueSourceRef'] = response.url.split('id=')[-1].strip()
         except:
@@ -548,7 +552,8 @@ class ResidentSpider(scrapy.Spider):
         # inspect_response(response,self)
         item = response.meta['item']
         item['promoterSourceURL'] = response.url
-        item['promoterSourceText'] = response.text
+        if self.custom_settings['SAVE_SOURCE'] == 1:
+            item['promoterSourceText'] = response.text
         try:
             item['promoterSourceRef'] = response.url.split('id=')[-1].strip()
         except:
