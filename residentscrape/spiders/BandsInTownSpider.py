@@ -26,34 +26,34 @@ class BandsInTownSpider(scrapy.Spider):
 
     def start_requests(self):
         self.custom_settings = get_project_settings()
-        # password = os.environ.get('SECRET_KEY')
-        # db = MySQLdb.connect(host=self.custom_settings['HOST'], port=3306, user=self.custom_settings['SQLUSERNAME'], passwd=password, db=self.custom_settings['DATABASE'])
-        # cursor = db.cursor()
-        #
-        # ## Get Artist URL from old database
-        # cursor.execute("SELECT * FROM dj_artist_website WHERE sourceID=1 LIMIT 1000;")
+        password = os.environ.get('SECRET_KEY')
+        db = MySQLdb.connect(host=self.custom_settings['HOST'], port=3306, user=self.custom_settings['SQLUSERNAME'], passwd=password, db=self.custom_settings['DATABASE'])
+        cursor = db.cursor()
+
+        ## Get Artist URL from old database
+        cursor.execute("SELECT * FROM dj_artist_website WHERE sourceID=1;")
+        data = cursor.fetchall()
+        urls = [row[3].strip() for row in data]
+
+        ## Get Artist URL from scrapeArtist table
+        # cursor.execute("SELECT * FROM WDJPNew.scrape_Artists where sourceID =1 order by refreshed LIMIT 1;")
         # data = cursor.fetchall()
-        # urls = [row[3].strip() for row in data]
-        #
-        # ## Get Artist URL from scrapeArtist table
-        # # cursor.execute("SELECT * FROM WDJPNew.scrape_Artists where sourceID =1 order by refreshed LIMIT 1;")
-        # # data = cursor.fetchall()
-        # # urls = [row[18].strip() for row in data]
-        #
-        #
-        # for url in urls:
-        #     url = url.replace('http://','https://').strip()
-        #     if 'https' in url and 'bandsintown' in url:
-        #         request = scrapy.Request(url=url, callback=self.parse)
-        #         yield request
-        #     else:
-        #         if len(url) > 6 and 'bandsintown' in url:
-        #             request = scrapy.Request(url='https://'+url, callback=self.parse)
-        #             yield request
+        # urls = [row[18].strip() for row in data]
+
+
+        for url in urls:
+            url = url.replace('http://','https://').strip()
+            if 'https' in url and 'bandsintown' in url:
+                request = scrapy.Request(url=url, callback=self.parse)
+                yield request
+            else:
+                if len(url) > 6 and 'bandsintown' in url:
+                    request = scrapy.Request(url='https://'+url, callback=self.parse)
+                    yield request
         ##For testing with single start url
-        url = 'https://www.bandsintown.com/Bicep'
-        request = scrapy.Request(url=url, callback=self.parse)
-        yield request
+        # url = 'https://www.bandsintown.com/Bicep'
+        # request = scrapy.Request(url=url, callback=self.parse)
+        # yield request
 
     def parse(self,response):
         item = ArtistItem()
