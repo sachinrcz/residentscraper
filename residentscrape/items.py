@@ -199,3 +199,46 @@ class ResidentItem(scrapy.Item):
 
     def __repr__(self):
         return repr({"Event Name":self['eventName'],"Venue Name":self['venueName']})
+
+class GoogleMapItem(scrapy.Item):
+
+    addressID = scrapy.Field()
+    query = scrapy.Field()
+    queryID = scrapy.Field()
+    address_types = scrapy.Field()
+    sourceRef = scrapy.Field()
+    formatted_address = scrapy.Field()
+    street_address = scrapy.Field()
+    street_number = scrapy.Field()
+    route = scrapy.Field()
+    intersection = scrapy.Field()
+    room = scrapy.Field()
+    floor = scrapy.Field()
+    post_box = scrapy.Field()
+    country = scrapy.Field()
+    administrative_area_level_1 = scrapy.Field()
+    administrative_area_level_2 = scrapy.Field()
+    administrative_area_level_3 = scrapy.Field()
+    administrative_area_level_4 = scrapy.Field()
+    administrative_area_level_5 = scrapy.Field()
+    colloquial_area = scrapy.Field()
+    locality = scrapy.Field()
+    ward = scrapy.Field()
+    sublocality = scrapy.Field()
+    neighborhood = scrapy.Field()
+    premise = scrapy.Field()
+    subpremise = scrapy.Field()
+    postal_code = scrapy.Field()
+    natural_feature = scrapy.Field()
+    airport = scrapy.Field()
+    park = scrapy.Field()
+    point_of_interest = scrapy.Field()
+    sourceURL = scrapy.Field()
+    sourceText = scrapy.Field()
+    longitude = scrapy.Field()
+    lattitude = scrapy.Field()
+
+    def __repr__(self):
+        """only print out attr1 after exiting the Pipeline"""
+        return repr({"Google Place ID": self['sourceRef']})
+

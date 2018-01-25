@@ -64,9 +64,9 @@ class BandsInTownSpider(scrapy.Spider):
             if len(item['sourceRef']) < 1:
                 item['sourceRef'] = response.url.split('/')[-2].strip()
         except:
-            pass
+              pass
         try:
-            item['name'] = response.css('header.headline').xpath('.//h1/div//text()').extract()[0]
+            item['name'] = response.css('div.artistInfoContainer-0a02819b::text').extract()[0].strip()
         except:
             pass
         item['sourceURL'] = response.url
@@ -74,14 +74,14 @@ class BandsInTownSpider(scrapy.Spider):
             item['sourceText'] = response.text
 
         try:
-            item['followers'] = response.css('p.count::text').extract()[0].replace('Trackers','').replace(',','').strip()
+            item['followers'] = response.css('span.artistInfoContainer-452c7757::text').extract()[0].replace('Trackers','').replace(',','').strip()
             item['followers'] = int(item['followers'])
         except:
             item['followers'] = 0
 
         try:
-            names = response.css('section.content-container').xpath('.//a//text()').extract()
-            links = response.css('section.content-container').xpath('.//a/@href').extract()
+            names = response.css('div.artist-b4271661').xpath('.//a//text()').extract()
+            links = response.css('div.artist-b4271661').xpath('.//a/@href').extract()
             links = [link.replace('/','').strip() for link in links]
             item['similarArtists'] = dict(zip(links,names))
         except:

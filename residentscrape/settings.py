@@ -33,7 +33,7 @@ ROBOTSTXT_OBEY = False
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
-#COOKIES_ENABLED = False
+COOKIES_ENABLED = False
 
 # Disable Telnet Console (enabled by default)
 #TELNETCONSOLE_ENABLED = False
@@ -70,6 +70,7 @@ ITEM_PIPELINES = {
    #  'residentscrape.pipelines.ArtistscrapePipeline': 300,
     'residentscrape.pipelines.ArtistSQLPipeLine': 300,
     'residentscrape.pipelines.EventSQLPipeLine': 300,
+    'residentscrape.pipelines.GoogleSQLPipeLine': 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -94,14 +95,14 @@ ITEM_PIPELINES = {
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 ## LocalMYSQL credentials
-# SQLUSERNAME = 'root'
-# DATABASE = 'WDJPNew'
-# HOST = 'localhost'
+SQLUSERNAME = 'root'
+DATABASE = 'WDJPNew'
+HOST = 'localhost'
 
 ## AWS RD credentials
-SQLUSERNAME = 'wdjpuser'
-DATABASE = 'wdjpdbcarling'
-HOST = 'wdjpdbcarling.czroneq4sqg9.us-west-2.rds.amazonaws.com'
+# SQLUSERNAME = 'wdjpuser'
+# DATABASE = 'wdjpdbcarling'
+# HOST = 'wdjpdbcarling.czroneq4sqg9.us-west-2.rds.amazonaws.com'
 
 
 
@@ -115,7 +116,7 @@ RA_YEAR = '2010'                                    # Years past this won't be c
 FACEBOOK_APP_ID='127062923380'
 FACEBOOK_APP_SECRET='0a2b51bc116940af57c65edc58a4c047'
 FACEBOOK_API_USE_MODE=1                              # mode 1 for single request and mode 2 for two requests
-
+GOOGLE_API_KEY='AIzaSyCFAeAkwm5EsjXgDXJAv8FGTc2sDs4S4mU'
 
 
 ## source IDs
@@ -125,6 +126,7 @@ FACEBOOK_SOURCE_ID=4
 GIGATOOL_SOURCE_ID=3
 BIT_SOURCE_ID=1
 RESIDENTADVISOR_SOURCE_ID=2
+GOOGLEMAP_SOURCE_ID=20
 
 ##
 SAVE_SOURCE=0                                        # 0 for No, 1 for Yes

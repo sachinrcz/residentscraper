@@ -11,6 +11,7 @@ import os
 import datetime
 from .items import ArtistItem
 from .items import ResidentItem
+from  .items import GoogleMapItem
 from scrapy.utils.project import get_project_settings
 import logging
 #
@@ -1018,3 +1019,198 @@ class EventSQLPipeLine(object):
 
         except(MySQLdb.Error) as e:
             self.logger.error("Method: (update_artist_extended_date) Error %d: %s" % (e.args[0], e.args[1]))
+
+class GoogleSQLPipeLine(object):
+    def __init__(self, crawlerSetting):
+        self.settings = get_project_settings()
+        self.sqlusername = self.settings.get('SQLUSERNAME')
+        self.sqlpassword = os.environ.get('SECRET_KEY')
+        self.db = self.settings.get('DATABASE')
+        self.host = self.settings.get('HOST')
+        self.sourceID = crawlerSetting.get('SOURCE_ID')
+        self.logger = logging.getLogger("GoogleSQLPipeline")
+        # extended data type mapping
+        self.extendedTypeArtist = {'discogs': 'discog', 'soundcloud': 'soundcloud', 'bandcamp': 'bandcamp',
+                                   'follows': 'follows', 'num_posts': 'num_posts', 'external_url': 'external_url',
+                                   'profile_pic_url': 'profile_pic_url'}
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        settings = crawler.settings
+        return cls(settings)
+
+    def open_spider(self, spider):
+        self.conn = MySQLdb.connect(user=self.sqlusername, passwd=self.sqlpassword, db=self.db, host=self.host,
+                                    charset="utf8mb4",
+                                    use_unicode=True)
+        self.cursor = self.conn.cursor(MySQLdb.cursors.DictCursor)
+
+    def close_spider(self, spider):
+        self.cursor.close()
+
+    def process_item(self, item, spider):
+        if not isinstance(item, GoogleMapItem):
+            return item
+        if not self.isExists(item):
+            self.insert_google_address(item)
+            self.insert_google_query(item)
+        else:
+            self.update_google_address(item)
+
+        return item
+
+    def isExists(self,item):
+        try:
+            query = "SELECT addressID FROM scrape_GoogleAddress WHERE sourceRef='{}'".format(item['sourceRef'])
+            results = self.cursor.execute(query)
+            if results > 0:
+                data = self.cursor.fetchone()
+                item['addressID'] = data['addressID']
+                return True
+        except(MySQLdb.Error) as e:
+            self.logger.error("Method: (isExists) Error %d: %s" % (e.args[0], e.args[1]))
+        return False
+
+
+    def update_google_address(self,item):
+        now = datetime.datetime.now()
+        try:
+            self.cursor.execute("""UPDATE scrape_GoogleAddress 
+                                   SET sourceRef=%s, addressTypes=%s, formattedAddress=%s,
+                                   street_address=%s, street_number=%s, route=%s, 
+                                   intersection=%s, room=%s, floor=%s,
+                                   post_box=%s, country=%s,
+                                   administrative_area_level_1=%s, administrative_area_level_2=%s, administrative_area_level_3=%s, administrative_area_level_4=%s,administrative_area_level_5=%s,
+                                   colloquial_area=%s, locality=%s, ward=%s, 
+                                   sublocality=%s, neighborhood=%s, premise=%s,
+                                   subpremise=%s, postal_code=%s,
+                                   natural_feature=%s, airport=%s, park=%s, 
+                                   point_of_interest=%s, longitude=%s, lattitude=%s,
+                                   sourceURL=%s, sourceText=%s, 
+                                   refreshed=%s WHERE addressID=%s """,
+                                (
+                                 item['sourceRef'].encode('utf-8'),
+                                 item['address_types'],
+                                 item['formatted_address'].encode('utf-8'),
+                                 item['street_address'].encode('utf-8'),
+                                 item['street_number'].encode('utf-8'),
+                                 item['route'].encode('utf-8'),
+                                 item['intersection'].encode('utf-8'),
+                                 item['room'].encode('utf-8'),
+                                 item['floor'].encode('utf-8'),
+                                 item['post_box'].encode('utf-8'),
+                                 item['country'].encode('utf-8'),
+                                 item['administrative_area_level_1'].encode('utf-8'),
+                                 item['administrative_area_level_2'].encode('utf-8'),
+                                 item['administrative_area_level_3'].encode('utf-8'),
+                                 item['administrative_area_level_4'].encode('utf-8'),
+                                 item['administrative_area_level_5'].encode('utf-8'),
+                                 item['colloquial_area'].encode('utf-8'),
+                                 item['locality'].encode('utf-8'),
+                                 item['ward'].encode('utf-8'),
+                                 item['sublocality'].encode('utf-8'),
+                                 item['neighborhood'].encode('utf-8'),
+                                 item['premise'].encode('utf-8'),
+                                 item['subpremise'].encode('utf-8'),
+                                 item['postal_code'].encode('utf-8'),
+                                 item['natural_feature'].encode('utf-8'),
+                                 item['airport'].encode('utf-8'),
+                                 item['park'].encode('utf-8'),
+                                 item['point_of_interest'].encode('utf-8'),
+                                 item['longitude'],
+                                 item['lattitude'],
+                                 item['sourceURL'].encode('utf-8'),
+                                 item['sourceText'],
+                                 now,
+                                 item['addressID']
+                                 ))
+
+            self.conn.commit()
+
+
+        except(MySQLdb.Error) as e:
+            self.logger.error("Method: (update_google_address) Error %d: %s" % (e.args[0], e.args[1]))
+
+    def insert_google_address(self,item):
+        now = datetime.datetime.now()
+        try:
+            query = """INSERT INTO scrape_GoogleAddress (
+                                   sourceRef, addressTypes, formattedAddress, street_address, street_number, route, intersection, room, floor, post_box, country,
+                                   administrative_area_level_1, administrative_area_level_2, administrative_area_level_3, administrative_area_level_4,administrative_area_level_5,
+                                   colloquial_area, locality, ward, sublocality, neighborhood, premise, subpremise, postal_code, natural_feature, airport, park, 
+                                   point_of_interest, longitude, lattitude,
+                                   sourceURL, sourceText, 
+                                   created
+                                    )  
+                                    VALUES (
+                                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                                     )"""
+
+            args = (item['sourceRef'].encode('utf-8'),
+                    str(item['address_types']),
+                    item['formatted_address'].encode('utf-8'),
+                    item['street_address'].encode('utf-8'),
+                    item['street_number'].encode('utf-8'),
+                    item['route'].encode('utf-8'),
+                    item['intersection'].encode('utf-8'),
+                    item['room'].encode('utf-8'),
+                    item['floor'].encode('utf-8'),
+                    item['post_box'].encode('utf-8'),
+                    item['country'].encode('utf-8'),
+                    item['administrative_area_level_1'].encode('utf-8'),
+                    item['administrative_area_level_2'].encode('utf-8'),
+                    item['administrative_area_level_3'].encode('utf-8'),
+                    item['administrative_area_level_4'].encode('utf-8'),
+                    item['administrative_area_level_5'].encode('utf-8'),
+                    item['colloquial_area'].encode('utf-8'),
+                    item['locality'].encode('utf-8'),
+                    item['ward'].encode('utf-8'),
+                    item['sublocality'].encode('utf-8'),
+                    item['neighborhood'].encode('utf-8'),
+                    item['premise'].encode('utf-8'),
+                    item['subpremise'].encode('utf-8'),
+                    item['postal_code'].encode('utf-8'),
+                    item['natural_feature'].encode('utf-8'),
+                    item['airport'].encode('utf-8'),
+                    item['park'].encode('utf-8'),
+                    item['point_of_interest'].encode('utf-8'),
+                    item['longitude'],
+                    item['lattitude'],
+                    item['sourceURL'].encode('utf-8'),
+                    item['sourceText'],
+                    now
+                    )
+            self.cursor.execute(query,args)
+
+            self.conn.commit()
+            item['addressID'] = self.cursor.lastrowid
+
+        except(MySQLdb.Error) as e:
+            self.logger.error("Method: (insert_google_address) Error %d: %s %s" % (e.args[0], e.args[1],item['sourceURL']))
+            self.logger.error(self.cursor._last_executed)
+
+
+    def insert_google_query(self,item):
+        now = datetime.datetime.now()
+        try:
+            query = """INSERT INTO scrape_GoogleQueries (
+                                                googleAddressID, query,  
+                                                created
+                                                    )  
+                                                VALUES (
+                                                    %s, %s,%s                               
+                                                 )"""
+            args = (item['addressID'],
+                    item['query'].encode('utf-8'),
+                    now
+                    )
+            self.cursor.execute(query, args)
+
+            self.conn.commit()
+
+        except(MySQLdb.Error) as e:
+            self.logger.error("Method: (insert_google_query) Error %d: %s %s" % (e.args[0], e.args[1], item['sourceURL']))
+
+

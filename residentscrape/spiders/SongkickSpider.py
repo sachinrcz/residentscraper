@@ -22,10 +22,10 @@ class SongkickSpider(scrapy.Spider):
 
     logger = logging.getLogger("SongkickSpider")
 
+    project_settings = get_project_settings()
     custom_settings = {
-        'SOURCE_ID': '6',
+        "SOURCE_ID": project_settings['SONGKICK_SOURCE_ID']
     }
-
 
     def start_requests(self):
         self.custom_settings = get_project_settings()
