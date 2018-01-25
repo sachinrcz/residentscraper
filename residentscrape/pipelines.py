@@ -404,13 +404,14 @@ class ArtistSQLPipeLine(object):
     def insert_similar_artist_bit(self,item,scrapeSourceRef, scrapeSourceName):
         now = datetime.datetime.now()
         try:
-            scrapeArtistRefID = None
-            sql = 'SELECT artistID FROM scrape_Artists WHERE sourceArtistRef="{}" and sourceID={};'.format(
-                scrapeSourceRef, self.sourceID)
-            results = self.cursor.execute(sql)
-            if results > 0:
-                data = self.cursor.fetchone()
-                scrapeArtistRefID = data[0]
+            # scrapeArtistRefID = None
+            # sql = 'SELECT artistID FROM scrape_Artists WHERE sourceArtistRef="{}" and sourceID={};'.format(
+            #     scrapeSourceRef, self.sourceID)
+            # results = self.cursor.execute(sql)
+            # if results > 0:
+            # if item['artistID']:
+                # data = self.cursor.fetchone()
+                # scrapeArtistRefID = data[0]
             self.cursor.execute("""INSERT INTO scrape_SimilarArtist (
                         scrapeArtistID, sourceID, 
                         scrapeSourceName, scrapeSourceRef, 
@@ -425,7 +426,8 @@ class ArtistSQLPipeLine(object):
                          self.sourceID,
                          scrapeSourceName,
                          scrapeSourceRef,
-                         scrapeArtistRefID,
+                         # scrapeArtistRefID,
+                         item['sourceRef'],
                          now
                          ))
 
@@ -433,6 +435,9 @@ class ArtistSQLPipeLine(object):
 
         except(MySQLdb.Error) as e:
             self.logger.error("Method: (insert_similar_artist_bit) Error %d: %s" % (e.args[0], e.args[1]))
+
+
+
 
 class EventSQLPipeLine(object):
 

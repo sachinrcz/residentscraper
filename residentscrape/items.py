@@ -145,6 +145,7 @@ class ResidentItem(scrapy.Item):
     eventVenueAddress = scrapy.Field()
     eventPromoters = scrapy.Field()
     eventPromotersURL = scrapy.Field()
+    event_image_url = scrapy.Field()
 
     ## Fields from venuePage
     venueSourceRef = scrapy.Field()
