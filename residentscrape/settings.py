@@ -95,14 +95,14 @@ ITEM_PIPELINES = {
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 ## LocalMYSQL credentials
-SQLUSERNAME = 'root'
-DATABASE = 'WDJPNew'
-HOST = 'localhost'
+# SQLUSERNAME = 'root'
+# DATABASE = 'WDJPNew'
+# HOST = 'localhost'
 
 ## AWS RD credentials
-# SQLUSERNAME = 'wdjpuser'
-# DATABASE = 'wdjpdbcarling'
-# HOST = 'wdjpdbcarling.czroneq4sqg9.us-west-2.rds.amazonaws.com'
+SQLUSERNAME = 'wdjpuser'
+DATABASE = 'wdjpdbcarling'
+HOST = 'wdjpdbcarling.czroneq4sqg9.us-west-2.rds.amazonaws.com'
 
 
 
