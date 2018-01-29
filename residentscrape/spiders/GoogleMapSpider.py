@@ -6,6 +6,7 @@ import datetime
 from scrapy.utils.project import get_project_settings
 import logging
 import json
+from postal.parser import parse_address
 
 class GoogleMapSpider(scrapy.Spider):
     name = "GoogleMapSpider"
@@ -35,33 +36,37 @@ class GoogleMapSpider(scrapy.Spider):
         self.conn = MySQLdb.connect(host=self.custom_settings['HOST'], port=3306, user=self.custom_settings['SQLUSERNAME'],
                              passwd=password, db=self.custom_settings['DATABASE'])
         self.cursor = self.conn.cursor(MySQLdb.cursors.DictCursor)
-        query = "SELECT * FROM scrape_Venues where sourceID=2 LIMIT 50;"
+        query = "SELECT * FROM scrape_Venues where sourceVenueRef <> -1 and sourceID=2 LIMIT 50;"
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
         for row in rows:
-            if row['sourceVenueRef'] != '-1':
 
-                query = None
+            query = None
 
-                ## check for GoogleMap Links
-                if len(row['googleMaps'])>0 and 'http://maps.google.com/maps?' in row['googleMaps']:
-                    query = row['googleMaps'].strip('http://maps.google.com/maps?q=').lower()
+            ## check for GoogleMap Links
+            if len(row['googleMaps'])>0 and 'http://maps.google.com/maps?' in row['googleMaps']:
+                query = row['googleMaps'].strip('http://maps.google.com/maps?q=').lower()
+            # elif len(row['venueFullAddress']):
+            #     query =
 
-                    ## Check if query in cache
-                    sqlquery = 'SELECT * FROM scrape_GoogleQueries WHERE query = "{}";'.format(query)
-                    results = self.cursor.execute(sqlquery)
 
-                    if results>0:
+            if query is not None:
 
-                        self.logger.info('Query: {} already exist in cached data'.format(query))
-                        data = self.cursor.fetchone()
-                        self.update_venue_google_address_id(data['googleAddressID'],row['scrapeVenueID'])
+                ## Check if query in cache
+                sqlquery = 'SELECT * FROM scrape_GoogleQueries WHERE query = "{}";'.format(query)
+                results = self.cursor.execute(sqlquery)
 
-                    else:
-                        request = scrapy.Request(url=self.APIURL+query, callback=self.parse)
-                        request.meta['query'] = query
-                        request.meta['venueID'] = row['scrapeVenueID']
-                        yield request
+                if results>0:
+
+                    self.logger.info('Query: {} already exist in cached data'.format(query))
+                    data = self.cursor.fetchone()
+                    self.update_venue_google_address_id(data['googleAddressID'],row['scrapeVenueID'])
+
+                else:
+                    request = scrapy.Request(url=self.APIURL+query, callback=self.parse)
+                    request.meta['query'] = query
+                    request.meta['venueID'] = row['scrapeVenueID']
+                    yield request
 
     def parse(self, response):
 
@@ -70,17 +75,19 @@ class GoogleMapSpider(scrapy.Spider):
             item.setdefault(field, '')
         item['longitude'] = None
         item['lattitude'] = None
+        item['addressID'] = -1
 
 
         item['query'] = response.meta['query']
-        venueID = response.meta['venueID']
+        item['venueID'] = response.meta['venueID']
         data = json.loads(response.text)
         item['sourceText'] = data
         item['sourceURL'] = response.url
+        item['resultCount'] = len(data['results'])
 
-        if data['status'] != 'OK':
-            self.update_venue_google_address_id('-1',venueID)
-        else:
+        if data['status'] == 'OK' or item['resultCount'] == 1:
+        #     self.update_venue_google_address_id(item['addressID'],item['venueID'])
+        # else:
             data = data['results'][0]
             item['address_types'] = data.get('types','')
             item['formatted_address'] = data.get('formatted_address','')
@@ -111,23 +118,23 @@ class GoogleMapSpider(scrapy.Spider):
 
 
 
-    def update_venue_google_address_id(self,googleAddressID,scrapeVenueID):
-        now = datetime.datetime.now()
-        try:
-            self.cursor.execute("""UPDATE scrape_Venues 
-                                          SET googleAddressID=%s, refreshed=%s
-                                            WHERE scrapeVenueID=%s""",
-                                (
-                                    googleAddressID,
-                                    now,
-                                    scrapeVenueID
-                                 ))
-
-            self.conn.commit()
-
-        except(MySQLdb.Error) as e:
-            self.logger.error("Method: (update_venue_google_address_id) Error %d: %s" % (e.args[0], e.args[1]))
-
-        pass
+    # def update_venue_google_address_id(self,googleAddressID,scrapeVenueID):
+    #     now = datetime.datetime.now()
+    #     try:
+    #         self.cursor.execute("""UPDATE scrape_Venues
+    #                                       SET googleAddressID=%s, refreshed=%s
+    #                                         WHERE scrapeVenueID=%s""",
+    #                             (
+    #                                 googleAddressID,
+    #                                 now,
+    #                                 scrapeVenueID
+    #                              ))
+    #
+    #         self.conn.commit()
+    #
+    #     except(MySQLdb.Error) as e:
+    #         self.logger.error("Method: (update_venue_google_address_id) Error %d: %s" % (e.args[0], e.args[1]))
+    #
+    #     pass
 
 

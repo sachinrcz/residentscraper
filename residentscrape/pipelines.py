@@ -11,7 +11,7 @@ import os
 import datetime
 from .items import ArtistItem
 from .items import ResidentItem
-from  .items import GoogleMapItem
+from  .items import GoogleMapItem, InstagramItem
 from scrapy.utils.project import get_project_settings
 import logging
 #
@@ -152,8 +152,7 @@ class ArtistSQLPipeLine(object):
         self.sourceID = crawlerSetting.get('SOURCE_ID')
         self.logger = logging.getLogger("ArtistSQLPipeline")
         # extended data type mapping
-        self.extendedTypeArtist = {'discogs':'discog','soundcloud':'soundcloud','bandcamp':'bandcamp',
-                                   'follows':'follows','num_posts':'num_posts','external_url':'external_url','profile_pic_url':'profile_pic_url'}
+        self.extendedTypeArtist = {'discogs':'discog','soundcloud':'soundcloud','bandcamp':'bandcamp'}
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -435,9 +434,6 @@ class ArtistSQLPipeLine(object):
 
         except(MySQLdb.Error) as e:
             self.logger.error("Method: (insert_similar_artist_bit) Error %d: %s" % (e.args[0], e.args[1]))
-
-
-
 
 class EventSQLPipeLine(object):
 
@@ -1056,12 +1052,17 @@ class GoogleSQLPipeLine(object):
     def process_item(self, item, spider):
         if not isinstance(item, GoogleMapItem):
             return item
-        if not self.isExists(item):
-            self.insert_google_address(item)
-            self.insert_google_query(item)
-        else:
-            self.update_google_address(item)
+        if item['resultCount'] == 1:
+            if not self.isExists(item):
+                self.insert_google_address(item)
+                self.insert_google_query(item)
+            else:
+                self.update_google_address(item)
 
+        else:
+            self.insert_google_query(item)
+
+        self.update_venue_google_address_id(item)
         return item
 
     def isExists(self,item):
@@ -1201,14 +1202,17 @@ class GoogleSQLPipeLine(object):
         now = datetime.datetime.now()
         try:
             query = """INSERT INTO scrape_GoogleQueries (
-                                                googleAddressID, query,  
+                                                googleAddressID, query, 
+                                                count, json, 
                                                 created
                                                     )  
                                                 VALUES (
-                                                    %s, %s,%s                               
+                                                    %s, %s,%s, %s, %s                               
                                                  )"""
             args = (item['addressID'],
                     item['query'].encode('utf-8'),
+                    item['resultCount'],
+                    item['sourceText'],
                     now
                     )
             self.cursor.execute(query, args)
@@ -1218,4 +1222,132 @@ class GoogleSQLPipeLine(object):
         except(MySQLdb.Error) as e:
             self.logger.error("Method: (insert_google_query) Error %d: %s %s" % (e.args[0], e.args[1], item['sourceURL']))
 
+    def update_venue_google_address_id(self,item):
+        now = datetime.datetime.now()
+        try:
+            self.cursor.execute("""UPDATE scrape_Venues 
+                                          SET googleAddressID=%s, refreshed=%s
+                                            WHERE scrapeVenueID=%s""",
+                                (
+                                    item['addressID'],
+                                    now,
+                                    item['venueID']
+                                 ))
 
+            self.conn.commit()
+
+        except(MySQLdb.Error) as e:
+            self.logger.error("Method: (update_venue_google_address_id) Error %d: %s" % (e.args[0], e.args[1]))
+
+        pass
+
+class InstagramPipeLine(object):
+
+    def __init__(self,crawlerSetting):
+        self.settings = get_project_settings()
+        self.sqlusername = self.settings.get('SQLUSERNAME')
+        self.sqlpassword = os.environ.get('SECRET_KEY')
+        self.db = self.settings.get('DATABASE')
+        self.host = self.settings.get('HOST')
+        self.sourceID = crawlerSetting.get('SOURCE_ID')
+        self.logger = logging.getLogger("InstagramSQLPipeline")
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        settings = crawler.settings
+        return cls(settings)
+
+    def open_spider(self, spider):
+        self.conn = MySQLdb.connect(user=self.sqlusername, passwd=self.sqlpassword, db=self.db, host=self.host, charset="utf8mb4",
+                                    use_unicode=True)
+        self.cursor = self.conn.cursor()
+
+    def close_spider(self, spider):
+        self.cursor.close()
+
+    def process_item(self, item, spider):
+        if not isinstance(item, InstagramItem):
+            return item
+        self.getArtistID(item)
+        if not self.isExist(item):
+            self.insert_insta_data(item)
+        else:
+            self.update_insta_data(item)
+
+        return item
+
+    def getArtistID(self,item):
+        try:
+            query = "SELECT artistID FROM scrape_Artists WHERE sourceArtistRef=%s and sourceID=%s"
+            args = (str(item['sourceRef']),self.sourceID)
+            results = self.cursor.execute(query,args)
+            if results > 0:
+                data = self.cursor.fetchone()
+                item['artistID'] = data[0]
+        except(MySQLdb.Error) as e:
+            self.logger.error("Method: (isExist) Error %d: %s" % (e.args[0], e.args[1]))
+
+    def isExist(self,item):
+        try:
+            query = "SELECT id FROM social_data_instagram WHERE sourceRef='{}'".format(str(item['sourceRef']))
+            results = self.cursor.execute(query)
+            if results > 0:
+                data = self.cursor.fetchone()
+                item['instaID'] = data[0]
+                return True
+        except(MySQLdb.Error) as e:
+            self.logger.error("Method: (isExist) Error %d: %s" % (e.args[0], e.args[1]))
+        return False
+
+    def insert_insta_data(self,item):
+        now = datetime.datetime.now()
+        try:
+            query = """INSERT INTO social_data_instagram (
+                                        name, artistID, sourceRef, follows, num_posts,
+                                        external_url, created
+                                            )  
+                                        VALUES ( 
+                                            %s, %s, %s, %s,
+                                            %s, %s, %s                              
+                                         )"""
+            args  = (
+                                 item['name'].encode('utf-8'),
+                                 item['artistID'],
+                                 item['sourceRef'].encode('utf-8'),
+                                 item['follows'],
+                                 item['num_posts'],
+                                 item['external_url'].encode('utf-8'),
+                                 now
+                                 )
+            self.cursor.execute(query,args)
+
+            self.conn.commit()
+            item['instaID'] = self.cursor.lastrowid
+
+        except(MySQLdb.Error) as e:
+            self.logger.error("Method: (insert_insta_data) Error %d: %s %s" % (e.args[0], e.args[1],item['name']))
+
+
+    def update_insta_data(self,item):
+        now = datetime.datetime.now()
+        try:
+            self.cursor.execute("""UPDATE social_data_instagram 
+                                   SET name=%s, artistID=%s, sourceRef=%s,
+                                   follows=%s, num_posts=%s, external_url=%s, 
+                                   refreshed=%s WHERE id=%s """,
+                                (item['name'].encode('utf-8'),
+                                 item['artistID'],
+                                 item['sourceRef'].encode('utf-8'),
+                                 item['follows'],
+                                 item['num_posts'],
+                                 item['external_url'].encode('utf-8'),
+                                 now,
+                                 item['instaID']
+                                 ))
+
+            self.conn.commit()
+            # self.logger.info(str(self.cursor._last_executed))
+
+
+        except(MySQLdb.Error) as e:
+            self.logger.error("Method: (update_insta_data) Error %d: %s" % (e.args[0], e.args[1]))

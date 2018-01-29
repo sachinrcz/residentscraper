@@ -71,6 +71,7 @@ ITEM_PIPELINES = {
     'residentscrape.pipelines.ArtistSQLPipeLine': 300,
     'residentscrape.pipelines.EventSQLPipeLine': 300,
     'residentscrape.pipelines.GoogleSQLPipeLine': 300,
+    'residentscrape.pipelines.InstagramPipeLine': 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

@@ -1,6 +1,6 @@
 import scrapy
 from scrapy.shell import inspect_response
-from residentscrape.items import ArtistItem
+from residentscrape.items import ArtistItem, InstagramItem
 import requests
 import json
 from bs4 import BeautifulSoup
@@ -63,6 +63,9 @@ class InstagramSpider(scrapy.Spider):
 
     def parse(self,response):
         item = ArtistItem()
+        insta = InstagramItem()
+        for field in insta.fields:
+            insta.setdefault(field, '')
         for field in item.fields:
             item.setdefault(field, '')
 
@@ -85,7 +88,7 @@ class InstagramSpider(scrapy.Spider):
             extract = lambda key:user.get(key,'') if user.get(key,'') is not None else ''
             item['name'] = extract('full_name')
             item['biography'] = extract('biography')
-            item['external_url'] = extract('external_url')
+            insta['external_url'] = extract('external_url')
             item['profile_pic_url'] = extract('profile_pic_url')
 
             try:
@@ -94,17 +97,21 @@ class InstagramSpider(scrapy.Spider):
                 item['followers'] = 0
 
             try:
-                item['follows'] = user.get('follows', {}).get('count', '')
+                insta['follows'] = user.get('follows', {}).get('count', '')
             except:
                 pass
 
             try:
-                item['num_posts'] = user.get('media', {}).get('count', '')
+                insta['num_posts'] = user.get('media', {}).get('count', '')
             except:
                 pass
+
+            insta['name'] = item['name']
+            insta['sourceRef'] = item['sourceRef']
 
         except Exception as e:
             self.logger.error("Method: (parse) Error: %s" % (str(e)))
 
 
         yield item
+        yield insta

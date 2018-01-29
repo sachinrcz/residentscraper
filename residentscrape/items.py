@@ -95,9 +95,7 @@ class ArtistItem(scrapy.Item):
     bandcamp = scrapy.Field()
     soundcloud = scrapy.Field()
 
-    follows = scrapy.Field()
-    num_posts = scrapy.Field()
-    external_url = scrapy.Field()
+
     profile_pic_url = scrapy.Field()
 
 
@@ -203,6 +201,9 @@ class ResidentItem(scrapy.Item):
 
 class GoogleMapItem(scrapy.Item):
 
+
+    venueID = scrapy.Field()
+    resultCount = scrapy.Field()
     addressID = scrapy.Field()
     query = scrapy.Field()
     queryID = scrapy.Field()
@@ -243,3 +244,16 @@ class GoogleMapItem(scrapy.Item):
         """only print out attr1 after exiting the Pipeline"""
         return repr({"Google Place ID": self['sourceRef']})
 
+class InstagramItem(scrapy.Item):
+
+    instaID = scrapy.Field()
+    artistID = scrapy.Field()
+    name = scrapy.Field()
+    follows = scrapy.Field()
+    num_posts = scrapy.Field()
+    external_url = scrapy.Field()
+    sourceRef = scrapy.Field()
+
+    def __repr__(self):
+        """only print out attr1 after exiting the Pipeline"""
+        return repr({"Insta Source": self['sourceRef']})
