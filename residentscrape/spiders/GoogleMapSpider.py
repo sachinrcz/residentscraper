@@ -44,20 +44,26 @@ class GoogleMapSpider(scrapy.Spider):
             query = None
 
             ## check for GoogleMap Links
-            if len(row['googleMaps'])>0 and 'http://maps.google.com/maps?' in row['googleMaps']:
+            if len(row['googleMaps']) > 0 and 'http://maps.google.com/maps?' in row['googleMaps']:
                 query = row['googleMaps'].strip('http://maps.google.com/maps?q=').lower()
-            elif len(row['venueFullAddress'])> 1:
-                query = row['venueFullAddress'].strip()
             else:
+                q1 = None
+
                 columns = ['venueStreet', 'venueCity', 'venueState', 'venueZip', 'venueCountry']
                 qdata = []
-                if row['sourceID'] == 1:
-                    qdata.append(row['venueName'].strip())
 
                 for x in columns:
-                    if len(row[x])>1:
+                    if len(row[x]) > 1:
                         qdata.append(row[x])
-                query = ', '.join(qdata)
+                q1 = ', '.join(qdata)
+
+                if len(q1) > len(row['venueFullAddress']):
+                    query = q1
+                else:
+                    query = row['venueFullAddress']
+
+                if row['sourceID'] == 1:
+                    query = row['venueName']+', '+ query
 
 
 

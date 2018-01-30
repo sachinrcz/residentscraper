@@ -112,8 +112,8 @@ BIT_MODE = 'upcoming'                                # upcoming or history
 RA_YEAR = '2010'                                    # Years past this won't be considered for scrape. Works only with history mode
 
 
-#LOG_STDOUT = True
-#LOG_FILE = '/home/sachin/Sachin/upwork/residentscrape/log/scrape_run_RA_history.log'
+# LOG_STDOUT = True
+# LOG_FILE = '/home/sachin/Sachin/upwork/residentscrape/log/scrape_run_RA_history.log'
 FACEBOOK_APP_ID='127062923380'
 FACEBOOK_APP_SECRET='0a2b51bc116940af57c65edc58a4c047'
 FACEBOOK_API_USE_MODE=1                              # mode 1 for single request and mode 2 for two requests
