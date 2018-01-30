@@ -80,7 +80,7 @@ class GoogleMapSpider(scrapy.Spider):
                     self.update_venue_google_address_id(data['googleAddressID'],row['scrapeVenueID'])
 
                 else:
-                    request = scrapy.Request(url=self.APIURL+query, callback=self.parse)
+                    request = scrapy.Request(url=self.APIURL+query, callback=self.parse, dont_filter=True)
                     request.meta['query'] = query
                     request.meta['venueID'] = row['scrapeVenueID']
                     yield request
