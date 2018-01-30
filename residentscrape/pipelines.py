@@ -1055,12 +1055,8 @@ class GoogleSQLPipeLine(object):
         if item['resultCount'] == 1:
             if not self.isExists(item):
                 self.insert_google_address(item)
-                self.insert_google_query(item)
-            # else:
-            #     self.update_google_address(item)
 
-        else:
-            self.insert_google_query(item)
+        self.insert_google_query(item)
 
         self.update_venue_google_address_id(item)
         return item
