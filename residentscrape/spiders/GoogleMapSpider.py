@@ -68,7 +68,7 @@ class GoogleMapSpider(scrapy.Spider):
 
 
 
-
+            self.logger.info("Query: "+str(query))
 
             if query is not None:
 
