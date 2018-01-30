@@ -39,6 +39,7 @@ class GoogleMapSpider(scrapy.Spider):
         query = "SELECT * FROM scrape_Venues where sourceVenueRef <> -1 ;"
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
+        self.logger.info("Total Rows: "+str(len(rows)))
         for row in rows:
 
             query = None
@@ -64,6 +65,8 @@ class GoogleMapSpider(scrapy.Spider):
 
                 if row['sourceID'] == 1:
                     query = row['venueName']+', '+ query
+
+
 
 
 
