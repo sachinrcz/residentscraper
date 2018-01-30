@@ -1,4 +1,4 @@
-from postal.parser import parse_address
+# from postal.parser import parse_address
 from scrapy.utils.project import get_project_settings
 
 import csv

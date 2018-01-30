@@ -6,7 +6,7 @@ import datetime
 from scrapy.utils.project import get_project_settings
 import logging
 import json
-from postal.parser import parse_address
+# from postal.parser import parse_address
 
 class GoogleMapSpider(scrapy.Spider):
     name = "GoogleMapSpider"
