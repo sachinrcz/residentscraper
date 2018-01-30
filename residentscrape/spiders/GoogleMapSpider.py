@@ -22,7 +22,7 @@ class GoogleMapSpider(scrapy.Spider):
         # "AUTOTHROTTLE_START_DELAY": 1,
         # "AUTOTHROTTLE_MAX_DELAY": 2,
         # "AUTOTHROTTLE_TARGET_CONCURRENCY": 5,
-        # "CONCURRENT_REQUESTS_PER_DOMAIN": 8,
+        "CONCURRENT_REQUESTS_PER_DOMAIN": 2,
         # "DOWNLOAD_DELAY": 1,
         "SOURCE_ID": project_settings['GOOGLEMAP_SOURCE_ID']
     }
