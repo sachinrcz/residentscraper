@@ -73,8 +73,8 @@ class GoogleMapSpider(scrapy.Spider):
             if query is not None:
 
                 ## Check if query in cache
-                sqlquery = "SELECT * FROM scrape_GoogleQueries WHERE query = '{}';".format(query)
-                results = self.cursor.execute(sqlquery)
+                sqlquery = "SELECT * FROM scrape_GoogleQueries WHERE query = '{}';"
+                results = self.cursor.execute(sqlquery,query)
 
                 if results>0:
 
