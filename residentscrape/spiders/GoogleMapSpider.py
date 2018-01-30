@@ -36,7 +36,7 @@ class GoogleMapSpider(scrapy.Spider):
         self.conn = MySQLdb.connect(host=self.custom_settings['HOST'], port=3306, user=self.custom_settings['SQLUSERNAME'],
                              passwd=password, db=self.custom_settings['DATABASE'])
         self.cursor = self.conn.cursor(MySQLdb.cursors.DictCursor)
-        query = "SELECT * FROM scrape_Venues where sourceVenueRef <> -1  LIMIT 50000;"
+        query = "SELECT * FROM scrape_Venues where sourceVenueRef <> -1 ;"
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
         for row in rows:
