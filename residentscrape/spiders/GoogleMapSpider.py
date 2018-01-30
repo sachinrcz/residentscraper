@@ -36,7 +36,7 @@ class GoogleMapSpider(scrapy.Spider):
         self.conn = MySQLdb.connect(host=self.custom_settings['HOST'], port=3306, user=self.custom_settings['SQLUSERNAME'],
                              passwd=password, db=self.custom_settings['DATABASE'])
         self.cursor = self.conn.cursor(MySQLdb.cursors.DictCursor)
-        query = "SELECT * FROM scrape_Venues where sourceVenueRef <> -1  LIMIT 500;"
+        query = "SELECT * FROM scrape_Venues where sourceVenueRef <> -1  LIMIT 5000;"
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
         for row in rows:
@@ -102,7 +102,7 @@ class GoogleMapSpider(scrapy.Spider):
             data = data['results'][0]
             item['address_types'] = data.get('types','')
             item['formatted_address'] = data.get('formatted_address','')
-            item['sourceRef'] = data.get('place_id','')
+            item['sourceRef'] = data.get('place_id','-1')
 
             try:
                 for x in data['address_components']:
