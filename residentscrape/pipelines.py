@@ -1056,8 +1056,8 @@ class GoogleSQLPipeLine(object):
             if not self.isExists(item):
                 self.insert_google_address(item)
                 self.insert_google_query(item)
-            else:
-                self.update_google_address(item)
+            # else:
+            #     self.update_google_address(item)
 
         else:
             self.insert_google_query(item)
@@ -1135,6 +1135,7 @@ class GoogleSQLPipeLine(object):
 
 
         except(MySQLdb.Error) as e:
+            self.logger.error("Method: (update_google_address) Error "+str(item['sourceURL']))
             self.logger.error("Method: (update_google_address) Error %d: %s" % (e.args[0], e.args[1]))
 
     def insert_google_address(self,item):
