@@ -18,12 +18,12 @@ class GoogleMapSpider(scrapy.Spider):
     project_settings = get_project_settings()
 
     custom_settings = {
-        "AUTOTHROTTLE_ENABLED": True,
-        "AUTOTHROTTLE_START_DELAY": 1,
-        "AUTOTHROTTLE_MAX_DELAY": 2,
-        "AUTOTHROTTLE_TARGET_CONCURRENCY": 5,
+        # "AUTOTHROTTLE_ENABLED": True,
+        # "AUTOTHROTTLE_START_DELAY": 1,
+        # "AUTOTHROTTLE_MAX_DELAY": 2,
+        # "AUTOTHROTTLE_TARGET_CONCURRENCY": 5,
         "CONCURRENT_REQUESTS_PER_DOMAIN": 1,
-        "DOWNLOAD_DELAY": 1,
+        # "DOWNLOAD_DELAY": 1,
         "SOURCE_ID": project_settings['GOOGLEMAP_SOURCE_ID']
     }
 
@@ -36,7 +36,7 @@ class GoogleMapSpider(scrapy.Spider):
         self.conn = MySQLdb.connect(host=self.custom_settings['HOST'], port=3306, user=self.custom_settings['SQLUSERNAME'],
                              passwd=password, db=self.custom_settings['DATABASE'])
         self.cursor = self.conn.cursor(MySQLdb.cursors.DictCursor)
-        query = "SELECT * FROM scrape_Venues where sourceVenueRef <> -1 and sourceID=2 LIMIT 50;"
+        query = "SELECT * FROM scrape_Venues where sourceVenueRef <> -1 and googleAddressID is NULL LIMIT 5000;"
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
         for row in rows:
@@ -46,8 +46,19 @@ class GoogleMapSpider(scrapy.Spider):
             ## check for GoogleMap Links
             if len(row['googleMaps'])>0 and 'http://maps.google.com/maps?' in row['googleMaps']:
                 query = row['googleMaps'].strip('http://maps.google.com/maps?q=').lower()
-            # elif len(row['venueFullAddress']):
-            #     query =
+            elif len(row['venueFullAddress'])> 1:
+                query = row['venueFullAddress'].strip()
+            else:
+                columns = ['venueStreet', 'venueCity', 'venueState', 'venueZip', 'venueCountry']
+                qdata = []
+                if row['sourceID'] == self.custom_settings['BIT_SOURCE_ID']:
+                    qdata.append(row['venueName'].strip())
+
+                for x in columns:
+                    if len(row[x])>1:
+                        qdata.append(row[x])
+                query = ', '.join(qdata)
+
 
 
             if query is not None:
@@ -118,23 +129,23 @@ class GoogleMapSpider(scrapy.Spider):
 
 
 
-    # def update_venue_google_address_id(self,googleAddressID,scrapeVenueID):
-    #     now = datetime.datetime.now()
-    #     try:
-    #         self.cursor.execute("""UPDATE scrape_Venues
-    #                                       SET googleAddressID=%s, refreshed=%s
-    #                                         WHERE scrapeVenueID=%s""",
-    #                             (
-    #                                 googleAddressID,
-    #                                 now,
-    #                                 scrapeVenueID
-    #                              ))
-    #
-    #         self.conn.commit()
-    #
-    #     except(MySQLdb.Error) as e:
-    #         self.logger.error("Method: (update_venue_google_address_id) Error %d: %s" % (e.args[0], e.args[1]))
-    #
-    #     pass
+    def update_venue_google_address_id(self,googleAddressID,scrapeVenueID):
+        now = datetime.datetime.now()
+        try:
+            self.cursor.execute("""UPDATE scrape_Venues
+                                          SET googleAddressID=%s, refreshed=%s
+                                            WHERE scrapeVenueID=%s""",
+                                (
+                                    googleAddressID,
+                                    now,
+                                    scrapeVenueID
+                                 ))
+
+            self.conn.commit()
+
+        except(MySQLdb.Error) as e:
+            self.logger.error("Method: (update_venue_google_address_id) Error %d: %s" % (e.args[0], e.args[1]))
+
+        pass
 
 
