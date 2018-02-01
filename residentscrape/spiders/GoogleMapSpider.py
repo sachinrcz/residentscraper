@@ -79,7 +79,7 @@ class GoogleMapSpider(scrapy.Spider):
 
                     self.logger.info('Query: {} already exist in cached data'.format(query))
                     data = self.cursor.fetchone()
-                    self.update_venue_google_address_id(data['googleAddressID'],data[''],data['count'],row['scrapeVenueID'])
+                    self.update_venue_google_address_id(data['ID'],data['googleAddressID'],data['count'],row['scrapeVenueID'])
 
                 else:
                     request = scrapy.Request(url=self.APIURL+query, callback=self.parse, dont_filter=True)
