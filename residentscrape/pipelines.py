@@ -1215,6 +1215,7 @@ class GoogleSQLPipeLine(object):
             self.cursor.execute(query, args)
 
             self.conn.commit()
+            item['queryID'] = self.cursor.lastrowid
 
         except(MySQLdb.Error) as e:
             self.logger.error("Method: (insert_google_query) Error %d: %s %s" % (e.args[0], e.args[1], item['sourceURL']))
@@ -1224,11 +1225,13 @@ class GoogleSQLPipeLine(object):
         try:
             self.cursor.execute("""UPDATE scrape_Venues 
                                           SET googleAddressID=%s,
+                                          googleQueryID=%s,
                                            googleResultsCount=%s,
                                            refreshed=%s
                                             WHERE scrapeVenueID=%s""",
                                 (
                                     item['addressID'],
+                                    item['queryID'],
                                     item['resultCount'],
                                     now,
                                     item['venueID']
