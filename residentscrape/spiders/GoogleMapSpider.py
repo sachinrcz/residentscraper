@@ -79,7 +79,7 @@ class GoogleMapSpider(scrapy.Spider):
 
                     self.logger.info('Query: {} already exist in cached data'.format(query))
                     data = self.cursor.fetchone()
-                    self.update_venue_google_address_id(data['googleAddressID'],row['scrapeVenueID'])
+                    self.update_venue_google_address_id(data['googleAddressID'],data['count'],row['scrapeVenueID'])
 
                 else:
                     request = scrapy.Request(url=self.APIURL+query, callback=self.parse, dont_filter=True)
@@ -103,6 +103,8 @@ class GoogleMapSpider(scrapy.Spider):
         item['sourceText'] = data
         item['sourceURL'] = response.url
         item['resultCount'] = len(data['results'])
+
+
 
         if data['status'] == 'OK' or item['resultCount'] == 1:
         #     self.update_venue_google_address_id(item['addressID'],item['venueID'])
@@ -137,14 +139,16 @@ class GoogleMapSpider(scrapy.Spider):
 
 
 
-    def update_venue_google_address_id(self,googleAddressID,scrapeVenueID):
+    def update_venue_google_address_id(self,googleAddressID,googleResultsCount, scrapeVenueID):
         now = datetime.datetime.now()
         try:
             self.cursor.execute("""UPDATE scrape_Venues
-                                          SET googleAddressID=%s, refreshed=%s
+                                          SET googleAddressID=%s,
+                                           googleResultsCount=%s, refreshed=%s
                                             WHERE scrapeVenueID=%s""",
                                 (
                                     googleAddressID,
+                                    googleResultsCount,
                                     now,
                                     scrapeVenueID
                                  ))

@@ -1223,10 +1223,13 @@ class GoogleSQLPipeLine(object):
         now = datetime.datetime.now()
         try:
             self.cursor.execute("""UPDATE scrape_Venues 
-                                          SET googleAddressID=%s, refreshed=%s
+                                          SET googleAddressID=%s,
+                                           googleResultsCount=%s,
+                                           refreshed=%s
                                             WHERE scrapeVenueID=%s""",
                                 (
                                     item['addressID'],
+                                    item['resultCount'],
                                     now,
                                     item['venueID']
                                  ))
