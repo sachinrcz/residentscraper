@@ -130,4 +130,4 @@ RESIDENTADVISOR_SOURCE_ID=2
 GOOGLEMAP_SOURCE_ID=20
 
 ##
-SAVE_SOURCE=0                                        # 0 for No, 1 for Yes
+SAVE_SOURCE=0                                        # 0 for No, 1 for Yes0

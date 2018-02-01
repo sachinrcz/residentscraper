@@ -36,7 +36,7 @@ class GoogleMapSpider(scrapy.Spider):
         self.conn = MySQLdb.connect(host=self.custom_settings['HOST'], port=3306, user=self.custom_settings['SQLUSERNAME'],
                              passwd=password, db=self.custom_settings['DATABASE'])
         self.cursor = self.conn.cursor(MySQLdb.cursors.DictCursor)
-        query = "SELECT * FROM scrape_Venues where sourceVenueRef <> -1 ;"
+        query = "SELECT * FROM scrape_Venues where isTBA=0"
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
         self.logger.info("Total Rows: "+str(len(rows)))
@@ -63,8 +63,8 @@ class GoogleMapSpider(scrapy.Spider):
                 else:
                     query = row['venueFullAddress']
 
-                if row['sourceID'] == 1:
-                    query = row['venueName']+', '+ query
+                # if row['sourceID'] == 1:
+                query = row['venueName']+', '+ query
 
 
 
