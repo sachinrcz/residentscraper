@@ -1052,11 +1052,13 @@ class GoogleSQLPipeLine(object):
     def process_item(self, item, spider):
         if not isinstance(item, GoogleMapItem):
             return item
-        if item['resultCount'] == 1:
+        if item['resultCount'] > 0 and len(item['sourceRef']) > 2:
             if not self.isExists(item):
                 self.insert_google_address(item)
-
-        self.insert_google_query(item)
+        if not self.isExistsQuery(item):
+            self.insert_google_query(item)
+        else:
+            self.update_google_query(item)
 
         self.update_venue_google_address_id(item)
         return item
@@ -1074,10 +1076,23 @@ class GoogleSQLPipeLine(object):
         return False
 
 
+    def isExistsQuery(self,item):
+        try:
+            query = "SELECT ID FROM scrape_GoogleQueries WHERE query='{}'".format(item['query'])
+            results = self.cursor.execute(query)
+            if results > 0:
+                data = self.cursor.fetchone()
+                item['queryID'] = data['ID']
+                return True
+        except(MySQLdb.Error) as e:
+            self.logger.error("Method: (isExistsQuery) Error %d: %s" % (e.args[0], e.args[1]))
+        return False
+
+
     def update_google_address(self,item):
         now = datetime.datetime.now()
         try:
-            self.cursor.execute("""UPDATE scrape_GoogleAddress 
+            self.cursor.execute("""UPDATE scrape_GoogleAddress
                                    SET sourceRef=%s, addressTypes=%s, formattedAddress=%s,
                                    street_address=%s, street_number=%s, route=%s, 
                                    intersection=%s, room=%s, floor=%s,
@@ -1133,6 +1148,28 @@ class GoogleSQLPipeLine(object):
         except(MySQLdb.Error) as e:
             self.logger.error("Method: (update_google_address) Error "+str(item['sourceURL']))
             self.logger.error("Method: (update_google_address) Error %d: %s" % (e.args[0], e.args[1]))
+
+
+    def update_google_query(self,item):
+        now = datetime.datetime.now()
+        try:
+            self.cursor.execute("""UPDATE scrape_GoogleQueries 
+                                   SET googleAddressID=%s, query=%s, count=%s,
+                                   json=%s, refreshed=%s WHERE ID=%s """,
+                                (
+                                    item['addressID'],
+                                    item['query'].encode('utf-8'),
+                                    item['resultCount'],
+                                    item['sourceText'],
+                                    now,
+                                    item['queryID']
+                                 ))
+
+            self.conn.commit()
+
+
+        except(MySQLdb.Error) as e:
+            self.logger.error("Method: (update_google_query) Error %d: %s" % (e.args[0], e.args[1]))
 
     def insert_google_address(self,item):
         now = datetime.datetime.now()

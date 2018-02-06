@@ -36,7 +36,8 @@ class GoogleMapSpider(scrapy.Spider):
         self.conn = MySQLdb.connect(host=self.custom_settings['HOST'], port=3306, user=self.custom_settings['SQLUSERNAME'],
                              passwd=password, db=self.custom_settings['DATABASE'])
         self.cursor = self.conn.cursor(MySQLdb.cursors.DictCursor)
-        query = "SELECT * FROM scrape_Venues where isTBA=0"
+        # query = "SELECT * FROM scrape_Venues where isTBA=0"
+        query = "SELECT * FROM scrape_Venues where googleResultsCount=2 and googleAddressID = -1;"
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
         self.logger.info("Total Rows: "+str(len(rows)))
@@ -69,13 +70,13 @@ class GoogleMapSpider(scrapy.Spider):
 
 
 
-            if query is not None:
+            if query is not None :
 
                 ## Check if query in cache
                 sqlquery = "SELECT * FROM scrape_GoogleQueries WHERE query =%s;"
                 results = self.cursor.execute(sqlquery,[query])
 
-                if results>0:
+                if results > 0 and row['googleResultsCount'] < 2:
 
                     self.logger.info('Query: {} already exist in cached data'.format(query))
                     data = self.cursor.fetchone()
@@ -97,7 +98,6 @@ class GoogleMapSpider(scrapy.Spider):
         item['addressID'] = -1
         item['queryID'] = -1
 
-
         item['query'] = response.meta['query']
         item['venueID'] = response.meta['venueID']
         data = json.loads(response.text)
@@ -105,39 +105,40 @@ class GoogleMapSpider(scrapy.Spider):
         item['sourceURL'] = response.url
         item['resultCount'] = len(data['results'])
 
-
-
-        if data['status'] == 'OK' or item['resultCount'] == 1:
-        #     self.update_venue_google_address_id(item['addressID'],item['venueID'])
-        # else:
+        if data['status'] == 'OK' and item['resultCount'] == 1:
             data = data['results'][0]
-            item['address_types'] = data.get('types','')
-            item['formatted_address'] = data.get('formatted_address','')
-            item['sourceRef'] = data.get('place_id','-1')
-
-            try:
-                for x in data['address_components']:
-                    key = x['types'][0]
-                    if key in item:
-                        item[key] = x['long_name']
-            except Exception as e:
-                self.logger.error(e)
-
-            ## Extract Geo Cordinates
-            try:
-                geo = data['geometry']['location']
-                item['longitude'] = geo.get('lng',None)
-                item['lattitude'] = geo.get('lat', None)
-            except:
-                pass
-
-
-
+            self.extract_info(data,item)
+        elif data['status'] == 'OK' and item['resultCount'] > 1:
+            required_list = ['bar', 'club', 'stadium']
+            for i in data['results']:
+                if 'bar' in i['types'] or 'club' in i['types'] or 'stadium' in i['types'] or 'night_club' in i['types']:
+                    data = i
+                    self.extract_info(data, item)
+                    break
 
 
         yield item
 
+    def extract_info(self,data,item):
+        item['address_types'] = data.get('types', '')
+        item['formatted_address'] = data.get('formatted_address', '')
+        item['sourceRef'] = data.get('place_id', '-1')
 
+        try:
+            for x in data['address_components']:
+                key = x['types'][0]
+                if key in item:
+                    item[key] = x['long_name']
+        except Exception as e:
+            self.logger.error(e)
+
+        ## Extract Geo Cordinates
+        try:
+            geo = data['geometry']['location']
+            item['longitude'] = geo.get('lng', None)
+            item['lattitude'] = geo.get('lat', None)
+        except:
+            pass
 
 
     def update_venue_google_address_id(self,googleQueryID, googleAddressID,googleResultsCount, scrapeVenueID):
