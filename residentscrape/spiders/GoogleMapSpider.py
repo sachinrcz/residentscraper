@@ -37,7 +37,7 @@ class GoogleMapSpider(scrapy.Spider):
                              passwd=password, db=self.custom_settings['DATABASE'])
         self.cursor = self.conn.cursor(MySQLdb.cursors.DictCursor)
         # query = "SELECT * FROM scrape_Venues where isTBA=0"
-        query = "SELECT * FROM scrape_Venues where googleResultsCount=2 and googleAddressID = -1;"
+        query = "SELECT * FROM scrape_Venues where googleResultsCount>2 and googleAddressID = -1;"
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
         self.logger.info("Total Rows: "+str(len(rows)))

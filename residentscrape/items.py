@@ -242,7 +242,7 @@ class GoogleMapItem(scrapy.Item):
 
     def __repr__(self):
         """only print out attr1 after exiting the Pipeline"""
-        return repr({"Google Place ID": self['sourceRef'], "VenueID":self['venueID'], "AddressID":self['addressID']})
+        return repr({"Query ID":self['queryID'], "Google Place ID": self['sourceRef'], "VenueID":self['venueID'], "AddressID":self['addressID']})
 
 class InstagramItem(scrapy.Item):
 
