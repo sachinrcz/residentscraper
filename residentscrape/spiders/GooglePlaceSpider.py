@@ -73,7 +73,7 @@ class GooglePlaceSpider(scrapy.Spider):
                                 (
 
                                     placeName,
-                                    placeSourceText,
+                                    str(placeSourceText).encode('utf-8'),
                                     now,
                                     addressID
                                  ))
