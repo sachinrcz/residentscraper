@@ -39,7 +39,7 @@ class GooglePlaceSpider(scrapy.Spider):
                                     passwd=password, db=self.custom_settings['DATABASE'])
         self.cursor = self.conn.cursor(MySQLdb.cursors.DictCursor)
 
-        query = "SELECT * FROM wdjpdbcarling.scrape_GoogleAddress where placeName is null LIMIT 1"
+        query = "SELECT * FROM wdjpdbcarling.scrape_GoogleAddress where placeName is null"
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
         self.logger.info("Total Rows: " + str(len(rows)))
