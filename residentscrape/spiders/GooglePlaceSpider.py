@@ -72,7 +72,7 @@ class GooglePlaceSpider(scrapy.Spider):
                                             WHERE addressID=%s""",
                                 (
 
-                                    placeName,
+                                    str(placeName).encode('utf-8'),
                                     str(placeSourceText).encode('utf-8'),
                                     now,
                                     addressID
